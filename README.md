@@ -10,9 +10,9 @@ everything on exit. Your Claude Code stays vanilla.
 > ⭐ **If you like hi, please give us a star on [GitHub](https://github.com/mars-base/hi)!**
 
 Connect to **any** Anthropic‑compatible API. Officially supports **Claude**,
-**DeepSeek**, **MiniMax**, **GLM**, **Kimi**, **Qwen**, **MIMO**, OpenRouter,
-internal gateways, and custom endpoints. Hot‑switch between all of them without
-restarting your session.
+**DeepSeek**, **MiniMax**, **GLM**, **Kimi (K2.6 / K2.7‑code)**, **Qwen**, **MIMO**,
+OpenRouter, internal gateways, and custom endpoints. Hot‑switch between all of
+them without restarting your session.
 
 The name comes from the first word you type into any Claude Code or AI agent
 session — **hi**. The agent replies "Hello, how can I help you?" and the work
@@ -170,6 +170,10 @@ providers and their endpoints:
 | Kimi | `anthropic` | `https://api.kimi.com/coding/` | [Docs](https://www.kimi.com/code/docs/en/) |
 | Qwen (Alibaba) | `anthropic` | `https://dashscope-intl.aliyuncs.com/apps/anthropic` | [Claude Code Guide](https://www.alibabacloud.com/help/en/model-studio/claude-code) |
 | MIMO (Xiaomi) | `anthropic` | `https://api.xiaomimimo.com/anthropic` | [Docs](https://platform.xiaomimimo.com/docs/en-US/api/chat/anthropic-api) |
+
+> **Kimi K2.7‑code** (256K context window) is supported as a `deepseek`‑type
+> backend. Set `context_window: 256000` in your config for accurate statusline
+> display.
 
 > Any gateway or proxy that speaks the Anthropic API protocol (e.g. Leihuo,
 > OpenRouter, OneAPI, internal gateways) also works — just set `type: anthropic`
@@ -544,6 +548,7 @@ make install
 | MiniMax M3 | $0.30 | $1.20 |
 | GLM 5.1 | $0.959 | $3.836 |
 | Kimi K2.6 | $0.89 | $3.74 |
+| Kimi K2.7‑code | $0.89 | $3.699 |
 | Qwen 3.7-Max | $0.822 | $2.466 |
 | MIMO V2.5-Pro | $0.411 | $0.822 |
 

@@ -7,7 +7,7 @@
 > ⭐ **如果喜欢 hi，请在 [GitHub](https://github.com/mars-base/hi) 给我们一颗 star！**
 
 可连接**任意** Anthropic 兼容 API。官方支持 **Claude**、**DeepSeek**、**MiniMax**、
-**GLM**、**Kimi**、**Qwen**、**MIMO**、OpenRouter、内部网关和自定义端点。在同一个 session 中热切换所有后端，无需重启。
+**GLM**、**Kimi（K2.6 / K2.7-code）**、**Qwen**、**MIMO**、OpenRouter、内部网关和自定义端点。在同一个 session 中热切换所有后端，无需重启。
 
 名称由来：每一次打开 Claude Code 或其他 AI agent 工具，第一句话都是从一句 **hi** 开始。AI 回复"你好，有什么可以帮助你的？"——然后工作就开始了。简单、好记、贴合 AI 时代。如有更好的名称也会更换。
 
@@ -153,6 +153,9 @@ hi 兼容任意 Anthropic 兼容 API。以下是官方支持的提供商及其�
 | Kimi | `anthropic` | `https://api.kimi.com/coding/` | [文档](https://www.kimi.com/code/docs/en/) |
 | Qwen（阿里通义） | `anthropic` | `https://dashscope-intl.aliyuncs.com/apps/anthropic` | [Claude Code 指南](https://www.alibabacloud.com/help/en/model-studio/claude-code) |
 | MIMO（小米） | `anthropic` | `https://api.xiaomimimo.com/anthropic` | [文档](https://platform.xiaomimimo.com/docs/en-US/api/chat/anthropic-api) |
+
+> **Kimi K2.7-code**（256K 上下文窗口）也已支持，后端类型可配置为 `deepseek`。
+> 建议在配置中设置 `context_window: 256000`，以便状态栏正确显示剩余上下文。
 
 > 任何支持 Anthropic API 协议的网关或代理（如雷火、OpenRouter、OneAPI、内部网关）也能直接使用——只需设置 `type: anthropic` 和对应的 `base_url`。
 
@@ -507,6 +510,7 @@ make install
 | MiniMax M3 | $0.30 | $1.20 |
 | GLM 5.1 | $0.959 | $3.836 |
 | Kimi K2.6 | $0.89 | $3.74 |
+| Kimi K2.7-code | $0.89 | $3.699 |
 | Qwen 3.7-Max | $0.822 | $2.466 |
 | MIMO V2.5-Pro | $0.411 | $0.822 |
 
