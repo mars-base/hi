@@ -391,7 +391,9 @@ func cmdLaunch() {
 		"ANTHROPIC_MODEL":                cfg.Backends[backend].Models.Sonnet,
 		"ANTHROPIC_DEFAULT_OPUS_MODEL":   cfg.Backends[backend].Models.Opus,
 		"ANTHROPIC_DEFAULT_SONNET_MODEL": cfg.Backends[backend].Models.Sonnet,
-		"ANTHROPIC_DEFAULT_HAIKU_MODEL":  cfg.Backends[backend].Models.Haiku,
+		"ANTHROPIC_DEFAULT_HAIKU_MODEL":     cfg.Backends[backend].Models.Haiku,
+		"CLAUDE_CODE_AUTO_COMPACT_WINDOW":   fmt.Sprintf("%d", cfg.Env.AutoCompactWindow),
+		"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE":   fmt.Sprintf("%d", cfg.Env.AutocompactPctOverride),
 	}, !preserveStatusline())
 	defer restoreCC()
 
@@ -486,7 +488,9 @@ func cmdAgent() {
 		"ANTHROPIC_MODEL":                bc.Models.Sonnet,
 		"ANTHROPIC_DEFAULT_OPUS_MODEL":   bc.Models.Opus,
 		"ANTHROPIC_DEFAULT_SONNET_MODEL": bc.Models.Sonnet,
-		"ANTHROPIC_DEFAULT_HAIKU_MODEL":  bc.Models.Haiku,
+		"ANTHROPIC_DEFAULT_HAIKU_MODEL":     bc.Models.Haiku,
+		"CLAUDE_CODE_AUTO_COMPACT_WINDOW":   fmt.Sprintf("%d", cfg.Env.AutoCompactWindow),
+		"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE":   fmt.Sprintf("%d", cfg.Env.AutocompactPctOverride),
 	}, !preserveStatusline())
 	defer restoreCC()
 
