@@ -186,7 +186,7 @@ func DefaultBackends() map[string]BackendConfig {
 			Pricing: PricingPerMillion{Input: 3.00, Output: 15.00},
 			Models: ModelMapping{
 				Opus:   "claude-opus-4-8",
-				Sonnet: "claude-sonnet-4-6",
+				Sonnet: "claude-sonnet-5",
 				Haiku:  "claude-haiku-4-5-20251001",
 			},
 		},
