@@ -432,7 +432,7 @@ func CCOverride(vars map[string]string, overrideStatusline bool) (restore func()
 
 	// Unmarshal the full document (preserving unknown fields).
 
-	var doc map[string]interface{}
+	var doc map[string]any
 	if err := json.Unmarshal(data, &doc); err != nil {
 		atomicRefCount(refPath, -1)
 		return func() {}, err
@@ -440,11 +440,11 @@ func CCOverride(vars map[string]string, overrideStatusline bool) (restore func()
 
 	envRaw, ok := doc["env"]
 	if !ok {
-		doc["env"] = map[string]interface{}{}
+		doc["env"] = map[string]any{}
 		envRaw = doc["env"]
 	}
 
-	envMap, ok := envRaw.(map[string]interface{})
+	envMap, ok := envRaw.(map[string]any)
 	if !ok {
 		atomicRefCount(refPath, -1)
 		return func() {}, err
@@ -458,7 +458,7 @@ func CCOverride(vars map[string]string, overrideStatusline bool) (restore func()
 	// and replace with hi statusline to enable model-name live updates.
 	// Preserve original when overrideStatusline is false.
 	if overrideStatusline {
-		if sl, ok := doc["statusLine"].(map[string]interface{}); ok {
+		if sl, ok := doc["statusLine"].(map[string]any); ok {
 			if cmd, ok := sl["command"].(string); ok && cmd != "" {
 				// Only save the original command if it is not already
 				// hi statusline (a later agent joining an already-patched
@@ -511,7 +511,7 @@ func CCOverride(vars map[string]string, overrideStatusline bool) (restore func()
 					}
 				}
 
-				doc["statusLine"] = map[string]interface{}{
+				doc["statusLine"] = map[string]any{
 					"type":            "command",
 					"command":         targetExe + " statusline",
 					"refreshInterval": 120,
