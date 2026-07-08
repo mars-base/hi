@@ -7,6 +7,13 @@ elastic.** No Claude Code modifications, no forks, no plugins. hi sits between
 Claude Code and the network — intercepting only API calls — and restores
 everything on exit. Your Claude Code stays vanilla.
 
+**Privacy baked in.** Claude Code sends telemetry and MCP registry requests
+directly to `api.anthropic.com`, bypassing `ANTHROPIC_BASE_URL`. hi sets
+`HTTP_PROXY`/`HTTPS_PROXY` on the Claude Code subprocess to route **all**
+network traffic through the proxy, then blocks CONNECT requests targeting
+`api.anthropic.com` at the tunnel level — before any data leaves your machine.
+Non‑Anthropic destinations (web search, etc.) tunnel through normally.
+
 > ⭐ **If you like hi, please give us a star on [GitHub](https://github.com/mars-base/hi)!**
 
 Connect to **any** Anthropic‑compatible API. Officially supports **Claude**,
