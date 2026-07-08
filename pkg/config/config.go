@@ -213,7 +213,7 @@ func DefaultConfig() *Config {
 		Backends:      DefaultBackends(),
 		Env: CCEnvConfig{
 			AutoCompactWindow:          200000,
-			AutocompactPctOverride:     64,
+			AutocompactPctOverride:     90,
 			DisableNonessentialTraffic: &disableTraffic,
 		},
 	}
