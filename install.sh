@@ -73,3 +73,9 @@ echo "  3. hi                   (proxy + Claude Code)"
 echo "  Or: hi proxy & hi cc    (standalone proxy + attach)"
 echo ""
 echo "Run: hi"
+
+# ─── Install counter (fire-and-forget) ───────────────────────────
+# Anonymous install count for adoption tracking. No PII collected.
+# Query stats: curl https://runaifs.pages.dev/api/stats?project=hi
+curl -fsSL --connect-timeout 3 --max-time 5 \
+  "https://runaifs.pages.dev/api/install?os=${OS}&project=hi" >/dev/null 2>&1 || true

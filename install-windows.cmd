@@ -122,4 +122,9 @@ echo   Or: hi proxy ^& hi cc ^(standalone proxy + attach^)
 echo.
 echo Run: hi
 
+REM ─── Install counter (fire-and-forget) ───────────────────────────
+REM Anonymous install count for adoption tracking. No PII collected.
+REM Query stats: curl https://runaifs.pages.dev/api/stats?project=hi
+curl -fsSL --connect-timeout 3 --max-time 5 "https://runaifs.pages.dev/api/install?os=windows&project=hi" >nul 2>&1
+
 endlocal
