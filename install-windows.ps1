@@ -84,6 +84,13 @@ if ($Tag) {
                 Write-Host "  Or: hi proxy & hi cc    (standalone proxy + attach)"
                 Write-Host ""
                 Write-Host "Run: hi"
+
+                # ─── Install counter (fire-and-forget) ─────────────────────
+                # Anonymous install count for adoption tracking. No PII collected.
+                # Query stats: curl https://runaifs.pages.dev/api/stats?project=hi
+                try {
+                    Invoke-RestMethod -Uri "https://runaifs.pages.dev/api/install?os=windows&project=hi" -Method Get -TimeoutSec 5 | Out-Null
+                } catch {}
             }
         } catch {
             Write-Host ""
