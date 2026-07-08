@@ -404,6 +404,8 @@ func cmdLaunch() {
 	logx.Info("  ANTHROPIC_DEFAULT_OPUS_MODEL   = %s", cfg.Backends[backend].Models.Opus)
 	logx.Info("  ANTHROPIC_DEFAULT_SONNET_MODEL = %s", cfg.Backends[backend].Models.Sonnet)
 	logx.Info("  ANTHROPIC_DEFAULT_HAIKU_MODEL  = %s", cfg.Backends[backend].Models.Haiku)
+	logx.Info("  HTTP_PROXY                     = %s", proxyURL)
+	logx.Info("  HTTPS_PROXY                    = %s", proxyURL)
 	logx.Info("  ANTHROPIC_API_KEY              = <kept from settings.json>")
 	logx.Info("")
 
@@ -412,10 +414,19 @@ func cmdLaunch() {
 	env = filterEnv(env, "ANTHROPIC_BASE_URL")
 	env = filterEnv(env, "ANTHROPIC_AUTH_TOKEN")
 	env = filterEnv(env, "ANTHROPIC_MODEL")
+	// Set HTTP_PROXY/HTTPS_PROXY so Claude Code's direct HTTPS connections
+	// (telemetry, MCP registry to api.anthropic.com) are routed through
+	// our proxy, where they are blocked. Without this, Claude Code
+	// hardcodes api.anthropic.com URLs that bypass ANTHROPIC_BASE_URL.
+	env = filterEnv(env, "HTTP_PROXY")
+	env = filterEnv(env, "HTTPS_PROXY")
+	env = filterEnv(env, "NO_PROXY")
 	env = append(env,
 		fmt.Sprintf("CLAUDE_CODE_AUTO_COMPACT_WINDOW=%d", cfg.Env.AutoCompactWindow),
 		fmt.Sprintf("CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=%d", cfg.Env.AutocompactPctOverride),
 		fmt.Sprintf("CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=%d", boolToInt(cfg.Env.DisableNonessentialTraffic)),
+		fmt.Sprintf("HTTP_PROXY=%s", proxyURL),
+		fmt.Sprintf("HTTPS_PROXY=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_BASE_URL=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_AUTH_TOKEN=%s", apiKey),
 		fmt.Sprintf("ANTHROPIC_MODEL=%s", cfg.Backends[backend].Models.Sonnet),
@@ -506,10 +517,16 @@ func cmdAgent() {
 	env = filterEnv(env, "ANTHROPIC_BASE_URL")
 	env = filterEnv(env, "ANTHROPIC_AUTH_TOKEN")
 	env = filterEnv(env, "ANTHROPIC_MODEL")
+	// Set HTTP_PROXY/HTTPS_PROXY to route all Claude Code traffic through proxy.
+	env = filterEnv(env, "HTTP_PROXY")
+	env = filterEnv(env, "HTTPS_PROXY")
+	env = filterEnv(env, "NO_PROXY")
 	env = append(env,
 		fmt.Sprintf("CLAUDE_CODE_AUTO_COMPACT_WINDOW=%d", cfg.Env.AutoCompactWindow),
 		fmt.Sprintf("CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=%d", cfg.Env.AutocompactPctOverride),
 		fmt.Sprintf("CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=%d", boolToInt(cfg.Env.DisableNonessentialTraffic)),
+		fmt.Sprintf("HTTP_PROXY=%s", proxyURL),
+		fmt.Sprintf("HTTPS_PROXY=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_BASE_URL=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_AUTH_TOKEN=%s", apiKey),
 		fmt.Sprintf("ANTHROPIC_MODEL=%s", bc.Models.Sonnet),

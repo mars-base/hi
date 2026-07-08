@@ -184,6 +184,71 @@ func (ps *ProxyState) Close() {
 	ps.costTracker.Close()
 }
 
+// handleConnect handles CONNECT method requests (HTTPS tunneling).
+// When HTTPS_PROXY is set, Claude Code's direct HTTPS connections
+// (telemetry, MCP registry to api.anthropic.com) arrive here.
+// We block connections to api.anthropic.com to prevent data leakage.
+func (ps *ProxyState) handleConnect(w http.ResponseWriter, r *http.Request) {
+	host := r.Host
+	// Remove port if present for comparison.
+	hostname := host
+	if colonIdx := strings.LastIndex(host, ":"); colonIdx > 0 {
+		hostname = host[:colonIdx]
+	}
+
+	ps.incrRequestCount()
+	logx.Info("#%d CONNECT %s", ps.RequestCount(), host)
+
+	// Block direct connections to api.anthropic.com.
+	// These are typically telemetry or MCP registry requests that bypass
+	// the ANTHROPIC_BASE_URL. Model calls already route through our
+	// backend configuration, so blocking this is safe.
+	if hostname == "api.anthropic.com" {
+		logx.Warn("#%d BLOCKED CONNECT %s (direct api.anthropic.com access blocked)", ps.RequestCount(), host)
+		http.Error(w, "Direct connections to api.anthropic.com are blocked by hi proxy", http.StatusForbidden)
+		return
+	}
+
+	// For other HTTPS destinations (e.g. web search), tunnel the connection.
+	// Establish a TCP tunnel to the target host.
+	targetConn, err := net.DialTimeout("tcp", host, 10*time.Second)
+	if err != nil {
+		logx.Error("#%d CONNECT tunnel failed for %s: %v", ps.RequestCount(), host, err)
+		http.Error(w, "Failed to establish tunnel", http.StatusBadGateway)
+		return
+	}
+	defer targetConn.Close()
+
+	// Hijack the client connection to get raw TCP access.
+	hijacker, ok := w.(http.Hijacker)
+	if !ok {
+		logx.Error("#%d CONNECT hijack not supported", ps.RequestCount())
+		http.Error(w, "Hijack not supported", http.StatusInternalServerError)
+		return
+	}
+	clientConn, _, err := hijacker.Hijack()
+	if err != nil {
+		logx.Error("#%d CONNECT hijack failed: %v", ps.RequestCount(), err)
+		return
+	}
+	defer clientConn.Close()
+
+	// Send 200 Connection Established to the client.
+	clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
+
+	// Bidirectional copy between client and target.
+	done := make(chan struct{}, 2)
+	go func() {
+		io.Copy(targetConn, clientConn)
+		done <- struct{}{}
+	}()
+	go func() {
+		io.Copy(clientConn, targetConn)
+		done <- struct{}{}
+	}()
+	<-done
+}
+
 func stringsJoin(s []string, sep string) string {
 	if len(s) == 0 {
 		return ""
@@ -200,6 +265,15 @@ func stringsJoin(s []string, sep string) string {
 func (ps *ProxyState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 
+	// Handle CONNECT method (HTTPS tunneling via HTTPS_PROXY).
+	// Claude Code may make direct HTTPS connections to api.anthropic.com
+	// (telemetry, MCP registry) bypassing ANTHROPIC_BASE_URL. When
+	// HTTPS_PROXY is set, these arrive as CONNECT requests.
+	if r.Method == http.MethodConnect {
+		ps.handleConnect(w, r)
+		return
+	}
+
 	// Handle control endpoints.
 	if stringsHasPrefix(path, "/_proxy/") {
 		ps.handleControl(w, r)
@@ -207,6 +281,21 @@ func (ps *ProxyState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ps.incrRequestCount()
+
+	// Log every request URL for visibility.
+	if r.URL.RawQuery != "" {
+		logx.Info("#%d %s %s?%s", ps.RequestCount(), r.Method, path, r.URL.RawQuery)
+	} else {
+		logx.Info("#%d %s %s", ps.RequestCount(), r.Method, path)
+	}
+
+	// Detect and block any request targeting api.anthropic.com directly
+	// (HTTP mode, e.g. Host header). CONNECT method is handled earlier.
+	if strings.Contains(r.Host, "api.anthropic.com") {
+		logx.Warn("#%d BLOCKED %s %s (api.anthropic.com in Host)", ps.RequestCount(), r.Method, path)
+		http.Error(w, "Direct access to api.anthropic.com is blocked by hi proxy", http.StatusForbidden)
+		return
+	}
 
 	isModel := IsModelRequest(path)
 	activeName := ps.ActiveName()
