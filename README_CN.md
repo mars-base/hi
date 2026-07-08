@@ -4,6 +4,8 @@
 
 **透明的多后端 Claude Code 代理 — 简单、快速、可靠、弹性。** 不修改 Claude Code、不需要 fork、不依赖插件。hi 位于 Claude Code 和网络之间——仅拦截 API 调用——退出时恢复一切原样。你的 Claude Code 始终保持原生状态。
 
+**内置隐私保护。** Claude Code 会绕过 `ANTHROPIC_BASE_URL` 直接向 `api.anthropic.com` 发送遥测和 MCP registry 请求。hi 在启动 Claude Code 子进程时注入 `HTTP_PROXY`/`HTTPS_PROXY`，将**所有**网络流量导入代理，然后在隧道层拦截目标为 `api.anthropic.com` 的 CONNECT 请求——数据在离开本机之前就被阻挡。非 Anthropic 目的地（网页搜索等）正常隧道透传。
+
 > ⭐ **如果喜欢 hi，请在 [GitHub](https://github.com/mars-base/hi) 给我们一颗 star！**
 
 可连接**任意** Anthropic 兼容 API。官方支持 **Claude**、**DeepSeek**、**MiniMax**、
