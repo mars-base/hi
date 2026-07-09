@@ -38,6 +38,12 @@ type Backend interface {
 	// true for deepseek, false for anthropic.
 	StripTopLevelThinking() bool
 
+	// IsAnthropicAPI returns true only for the official Anthropic API
+	// (api.anthropic.com). Third-party anthropic-compatible backends return false.
+	// Used to decide whether to keep Anthropic-specific request fields like
+	// context_management.
+	IsAnthropicAPI() bool
+
 	// ReasoningEffort returns the output_config.effort level for this backend.
 	// Used by deepseek-type backends to set max reasoning. Empty means disabled.
 	ReasoningEffort() string
@@ -114,6 +120,9 @@ func (b *anthropicBackend) Name() string                { return b.name }
 func (b *anthropicBackend) NeedsThinkingStrip() bool    { return true }
 func (b *anthropicBackend) StripTopLevelThinking() bool { return b.stripTopThink }
 func (b *anthropicBackend) ReasoningEffort() string     { return b.reasonEffort }
+func (b *anthropicBackend) IsAnthropicAPI() bool {
+	return strings.Contains(b.target.Host, "anthropic.com")
+}
 
 func (b *anthropicBackend) TargetURL() *url.URL { return b.target }
 
@@ -189,6 +198,7 @@ func (b *deepseekBackend) Name() string                { return b.name }
 func (b *deepseekBackend) NeedsThinkingStrip() bool    { return false }
 func (b *deepseekBackend) StripTopLevelThinking() bool { return b.stripTopThink }
 func (b *deepseekBackend) ReasoningEffort() string     { return b.reasonEffort }
+func (b *deepseekBackend) IsAnthropicAPI() bool        { return false }
 
 func (b *deepseekBackend) TargetURL() *url.URL { return b.target }
 

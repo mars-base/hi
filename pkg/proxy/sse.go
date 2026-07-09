@@ -122,12 +122,12 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 		}
 	}
 
-	// Strip context_management for backends that don't strip thinking
-	// (deepseek, kimi, minimax, glm51). context_management.edits with
+	// Strip context_management for non-Anthropic backends.
+	// This is an Anthropic-specific field (context_management.edits with
 	// clear_thinking_20251015 signals that thinking blocks were cleared
-	// from context; deepseek interprets this as "thinking mode active"
-	// and requires thinking blocks in every message — causing 400.
-	if !backend.NeedsThinkingStrip() {
+	// from context). Third-party backends (deepseek, qwen, kimi, minimax,
+	// glm, mimo, etc.) don't understand it and return 400.
+	if !backend.IsAnthropicAPI() {
 		if _, ok := parsed["context_management"]; ok {
 			delete(parsed, "context_management")
 			changed = true
