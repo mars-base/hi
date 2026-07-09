@@ -7,12 +7,15 @@ elastic.** No Claude Code modifications, no forks, no plugins. hi sits between
 Claude Code and the network — intercepting only API calls — and restores
 everything on exit. Your Claude Code stays vanilla.
 
-**Privacy baked in.** Claude Code sends telemetry and MCP registry requests
-directly to `api.anthropic.com`, bypassing `ANTHROPIC_BASE_URL`. hi sets
-`HTTP_PROXY`/`HTTPS_PROXY` on the Claude Code subprocess to route **all**
-network traffic through the proxy, then blocks CONNECT requests targeting
-`api.anthropic.com` at the tunnel level — before any data leaves your machine.
-Non‑Anthropic destinations (web search, etc.) tunnel through normally.
+**Privacy baked in.** hi proxy intercepts **all** network traffic from Claude Code
+by injecting `HTTP_PROXY`/`HTTPS_PROXY` into the subprocess. Any telemetry,
+analytics, or suspicious backdoor requests targeting Anthropic/Claude-branded
+domains are blocked at the tunnel level — before any data leaves your machine.
+Blocked domains include `api.anthropic.com` (telemetry, metrics), `a-api.anthropic.com`
+(analytics), `a-cdn.anthropic.com` (analytics CDN), `downloads.claude.ai`
+(auto-updater, plugin downloads), and `*.claudeusercontent.com` (artifact viewing,
+Chrome extension bridge). Legitimate non-Anthropic destinations (web search,
+MCP servers, etc.) tunnel through normally.
 
 > ⭐ **If you like hi, please give us a star on [GitHub](https://github.com/mars-base/hi)!**
 
@@ -89,7 +92,9 @@ user PATH. Restart your terminal after installation.
 hi init-config
 
 # 2. Edit config (Linux/macOS: ~/.hi/config.yaml, Windows: %USERPROFILE%/.hi/config.yaml)
-#    Skip if the auto-detected defaults are fine.
+#    Or use the sample template with all providers pre-configured:
+#      cp config.sample.yaml ~/.hi/config.yaml
+#    Then fill in your API keys.
 
 # 3. Launch proxy + Claude Code
 hi
@@ -571,4 +576,4 @@ savings: 0.0618                 ← 85.6% saved
 
 ## License
 
-[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) — free for personal and non-commercial use. Commercial use requires explicit permission.
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/) — free for personal and non-commercial use. Commercial use requires explicit permission.
