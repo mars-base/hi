@@ -40,7 +40,7 @@ hi 目前优先支持 Claude Code——即使市面上已经有很多 harness ag
 ### 安装（Linux / macOS）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/scripts/install.sh | sh
 ```
 
 以上命令会下载最新 release 二进制文件并安装到 `/usr/local/bin/hi`
@@ -51,13 +51,13 @@ curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/install.sh | sh
 **PowerShell：**
 
 ```powershell
-irm https://raw.githubusercontent.com/mars-base/hi/main/install-windows.ps1 | iex
+irm https://raw.githubusercontent.com/mars-base/hi/main/scripts/install-windows.ps1 | iex
 ```
 
 **CMD：**
 
 ```batch
-curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/install-windows.cmd -o install.cmd && install.cmd && del install.cmd
+curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/scripts/install-windows.cmd -o install.cmd && install.cmd && del install.cmd
 ```
 
 安装到 `%USERPROFILE%\.local\bin\hi.exe` 并自动添加到用户 PATH。安装后重启终端即可使用。

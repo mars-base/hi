@@ -63,7 +63,7 @@ protocol, making it a universal multi-backend proxy.
 ### Install (Linux / macOS)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/scripts/install.sh | sh
 ```
 
 This downloads the latest release binary and installs it to `/usr/local/bin/hi`
@@ -74,13 +74,13 @@ This downloads the latest release binary and installs it to `/usr/local/bin/hi`
 **PowerShell:**
 
 ```powershell
-irm https://raw.githubusercontent.com/mars-base/hi/main/install-windows.ps1 | iex
+irm https://raw.githubusercontent.com/mars-base/hi/main/scripts/install-windows.ps1 | iex
 ```
 
 **CMD:**
 
 ```batch
-curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/install-windows.cmd -o install.cmd && install.cmd && del install.cmd
+curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/scripts/install-windows.cmd -o install.cmd && install.cmd && del install.cmd
 ```
 
 Installs to `%USERPROFILE%\.local\bin\hi.exe` and adds the directory to your
