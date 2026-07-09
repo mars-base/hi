@@ -30,6 +30,40 @@ var tierToClaudeModel = [][2]string{
 	{"haiku", "claude-haiku-4-5-20251001"},
 }
 
+// blockedDomains lists hostnames that Claude Code connects to for telemetry,
+// error reporting, plugin downloads, and other non-essential traffic.
+// Sourced from https://code.claude.com/docs/en/network-config and
+// https://code.claude.com/docs/en/data-usage.
+//
+// Entries without a leading dot require exact match.
+// Entries with a leading dot (e.g. ".anthropic.com") match the domain and all subdomains.
+var blockedDomains = []string{
+	// Anthropic / Claude branded domains — strongly associated, no other purpose
+	"api.anthropic.com",            // metrics, telemetry, WebFetch safety check
+	"a-api.anthropic.com",          // analytics API
+	"a-cdn.anthropic.com",          // analytics CDN
+	"downloads.claude.ai",          // plugin downloads, auto-updater
+	"bridge.claudeusercontent.com", // Chrome extension WebSocket bridge
+	".claudeusercontent.com",       // artifact viewing (*.claudeusercontent.com)
+}
+
+// matchBlocked returns the matching domain rule if hostname is blocked, empty string otherwise.
+func matchBlocked(hostname string) string {
+	hostname = strings.ToLower(hostname)
+	for _, domain := range blockedDomains {
+		if domain[0] == '.' {
+			if strings.HasSuffix(hostname, domain) || hostname == domain[1:] {
+				return domain
+			}
+		} else {
+			if hostname == domain {
+				return domain
+			}
+		}
+	}
+	return ""
+}
+
 // ProxyState holds the running proxy's mutable state.
 type ProxyState struct {
 	mu sync.RWMutex
@@ -187,7 +221,7 @@ func (ps *ProxyState) Close() {
 // handleConnect handles CONNECT method requests (HTTPS tunneling).
 // When HTTPS_PROXY is set, Claude Code's direct HTTPS connections
 // (telemetry, MCP registry to api.anthropic.com) arrive here.
-// We block connections to api.anthropic.com to prevent data leakage.
+// We block connections to domains in blockedDomains to prevent data leakage.
 func (ps *ProxyState) handleConnect(w http.ResponseWriter, r *http.Request) {
 	host := r.Host
 	// Remove port if present for comparison.
@@ -199,13 +233,14 @@ func (ps *ProxyState) handleConnect(w http.ResponseWriter, r *http.Request) {
 	ps.incrRequestCount()
 	logx.Info("#%d CONNECT %s", ps.RequestCount(), host)
 
-	// Block direct connections to api.anthropic.com.
-	// These are typically telemetry or MCP registry requests that bypass
+	// Block direct connections to blacklisted domains.
+	// These are typically telemetry, error reporting, or plugin downloads that bypass
 	// the ANTHROPIC_BASE_URL. Model calls already route through our
 	// backend configuration, so blocking this is safe.
-	if hostname == "api.anthropic.com" {
-		logx.Warn("#%d BLOCKED CONNECT %s (direct api.anthropic.com access blocked)", ps.RequestCount(), host)
-		http.Error(w, "Direct connections to api.anthropic.com are blocked by hi proxy", http.StatusForbidden)
+	if matched := matchBlocked(hostname); matched != "" {
+		userAgent := r.Header.Get("User-Agent")
+		logx.Warn("#%d BLOCKED CONNECT %s → rule=[%s] ua=%s", ps.RequestCount(), host, matched, userAgent)
+		http.Error(w, fmt.Sprintf("Connections to %s are blocked by hi proxy", hostname), http.StatusForbidden)
 		return
 	}
 
@@ -250,14 +285,7 @@ func (ps *ProxyState) handleConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 func stringsJoin(s []string, sep string) string {
-	if len(s) == 0 {
-		return ""
-	}
-	r := s[0]
-	for i := 1; i < len(s); i++ {
-		r += sep + s[i]
-	}
-	return r
+	return strings.Join(s, sep)
 }
 
 // ServeHTTP handles incoming HTTP requests — routing model calls to the
@@ -282,18 +310,26 @@ func (ps *ProxyState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	ps.incrRequestCount()
 
-	// Log every request URL for visibility.
+	// Log every request URL (full) for visibility.
+	fullURL := fmt.Sprintf("http://%s%s", r.Host, path)
 	if r.URL.RawQuery != "" {
-		logx.Info("#%d %s %s?%s", ps.RequestCount(), r.Method, path, r.URL.RawQuery)
-	} else {
-		logx.Info("#%d %s %s", ps.RequestCount(), r.Method, path)
+		fullURL = fmt.Sprintf("%s?%s", fullURL, r.URL.RawQuery)
 	}
+	logx.Info("#%d %s %s", ps.RequestCount(), r.Method, fullURL)
 
-	// Detect and block any request targeting api.anthropic.com directly
+	// Detect and block any request targeting blacklisted domains directly
 	// (HTTP mode, e.g. Host header). CONNECT method is handled earlier.
-	if strings.Contains(r.Host, "api.anthropic.com") {
-		logx.Warn("#%d BLOCKED %s %s (api.anthropic.com in Host)", ps.RequestCount(), r.Method, path)
-		http.Error(w, "Direct access to api.anthropic.com is blocked by hi proxy", http.StatusForbidden)
+	hostOnly := r.Host
+	if colonIdx := strings.LastIndex(hostOnly, ":"); colonIdx > 0 {
+		hostOnly = hostOnly[:colonIdx]
+	}
+	if matched := matchBlocked(hostOnly); matched != "" {
+		blockedURL := fmt.Sprintf("http://%s%s", r.Host, path)
+		if r.URL.RawQuery != "" {
+			blockedURL = fmt.Sprintf("%s?%s", blockedURL, r.URL.RawQuery)
+		}
+		logx.Warn("#%d BLOCKED %s %s → rule=[%s] ua=%s", ps.RequestCount(), r.Method, blockedURL, matched, r.Header.Get("User-Agent"))
+		http.Error(w, fmt.Sprintf("Access to %s is blocked by hi proxy", hostOnly), http.StatusForbidden)
 		return
 	}
 
