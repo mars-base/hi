@@ -4,7 +4,7 @@
 
 **透明的多后端 Claude Code 代理 — 简单、快速、可靠、弹性。** 不修改 Claude Code、不需要 fork、不依赖插件。hi 位于 Claude Code 和网络之间——仅拦截 API 调用——退出时恢复一切原样。你的 Claude Code 始终保持原生状态。
 
-**内置隐私保护。** hi proxy 通过注入 `HTTP_PROXY`/`HTTPS_PROXY` 接管 Claude Code 的**所有**网络流量。任何遥测、分析或可疑后门请求——目标为 Anthropic/Claude 品牌域名的——都在隧道层被拦截，数据在离开本机之前就被阻挡。拦截的域名包括 `api.anthropic.com`（遥测、指标）、`a-api.anthropic.com`（分析）、`a-cdn.anthropic.com`（分析 CDN）、`downloads.claude.ai`（自动更新、插件下载）和 `*.claudeusercontent.com`（artifact 查看、Chrome 扩展桥接）。合法的非 Anthropic 目的地（网页搜索、MCP 服务器等）正常隧道透传。
+**内置隐私保护。** hi proxy 通过注入 `HTTP_PROXY`/`HTTPS_PROXY` 接管 Claude Code 的**所有**网络流量。任何遥测、分析或可疑后门请求——目标为 Anthropic/Claude 品牌域名的——都在隧道层被拦截，数据在离开本机之前就被阻挡。拦截的域名包括 `api.anthropic.com`（遥测、指标）、`a-api.anthropic.com`（分析）、`a-cdn.anthropic.com`（分析 CDN）、`*.claude.ai`（下载、API）、`*.claudeusercontent.com`（artifact 查看、Chrome 扩展桥接）和 `*.claude.com`（code、console）。合法的非 Anthropic 目的地（网页搜索、MCP 服务器等）正常隧道透传。
 
 > ⭐ **如果喜欢 hi，请在 [GitHub](https://github.com/mars-base/hi) 给我们一颗 star！**
 

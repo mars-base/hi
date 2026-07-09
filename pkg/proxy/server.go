@@ -39,12 +39,12 @@ var tierToClaudeModel = [][2]string{
 // Entries with a leading dot (e.g. ".anthropic.com") match the domain and all subdomains.
 var blockedDomains = []string{
 	// Anthropic / Claude branded domains — strongly associated, no other purpose
-	"api.anthropic.com",            // metrics, telemetry, WebFetch safety check
-	"a-api.anthropic.com",          // analytics API
-	"a-cdn.anthropic.com",          // analytics CDN
-	"downloads.claude.ai",          // plugin downloads, auto-updater
-	"bridge.claudeusercontent.com", // Chrome extension WebSocket bridge
-	".claudeusercontent.com",       // artifact viewing (*.claudeusercontent.com)
+	"api.anthropic.com",       // metrics, telemetry, WebFetch safety check
+	"a-api.anthropic.com",     // analytics API
+	"a-cdn.anthropic.com",     // analytics CDN
+	".claude.ai",              // *.claude.ai (downloads, api, etc.)
+	".claudeusercontent.com",  // *.claudeusercontent.com (artifact viewing, bridge)
+	".claude.com",             // *.claude.com (code, console, etc.)
 }
 
 // matchBlocked returns the matching domain rule if hostname is blocked, empty string otherwise.

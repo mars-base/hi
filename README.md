@@ -12,10 +12,11 @@ by injecting `HTTP_PROXY`/`HTTPS_PROXY` into the subprocess. Any telemetry,
 analytics, or suspicious backdoor requests targeting Anthropic/Claude-branded
 domains are blocked at the tunnel level — before any data leaves your machine.
 Blocked domains include `api.anthropic.com` (telemetry, metrics), `a-api.anthropic.com`
-(analytics), `a-cdn.anthropic.com` (analytics CDN), `downloads.claude.ai`
-(auto-updater, plugin downloads), and `*.claudeusercontent.com` (artifact viewing,
-Chrome extension bridge). Legitimate non-Anthropic destinations (web search,
-MCP servers, etc.) tunnel through normally.
+(analytics), `a-cdn.anthropic.com` (analytics CDN), `*.claude.ai` (downloads, API),
+`*.claudeusercontent.com` (artifact viewing, Chrome extension bridge), and
+`*.claude.com` (code, console).
+Legitimate non-Anthropic destinations (web search, MCP servers, etc.) tunnel
+through normally.
 
 > ⭐ **If you like hi, please give us a star on [GitHub](https://github.com/mars-base/hi)!**
 
