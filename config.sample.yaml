@@ -1,0 +1,130 @@
+# hi sample configuration
+# Copy this file to ~/.hi/config.yaml and fill in your API keys.
+#
+#   cp config.sample.yaml ~/.hi/config.yaml
+
+active_backend: deepseek
+proxy_port: 18799
+
+env:
+  auto_compact_window: 512000            # CLAUDE_CODE_AUTO_COMPACT_WINDOW (default: 200000)
+  autocompact_pct_override: 90           # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (default: 64)
+  disable_nonessential_traffic: false     # CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC (default: true)
+
+backends:
+  # ─── Claude (Anthropic official) ─────────────────────────────────
+  claude:
+    type: anthropic
+    base_url: https://api.anthropic.com
+    api_key: "${ANTHROPIC_API_KEY}"
+    models:
+      opus: claude-opus-4-8
+      sonnet: claude-sonnet-5
+      haiku: claude-haiku-4-5-20251001
+    pricing:
+      input: 3.00
+      output: 15.00
+
+  # ─── DeepSeek ────────────────────────────────────────────────────
+  deepseek:
+    type: deepseek
+    base_url: https://api.deepseek.com/anthropic
+    api_key: "${DEEPSEEK_API_KEY}"
+    reasoning_effort: max
+    models:
+      opus: deepseek-v4-pro
+      sonnet: deepseek-v4-pro
+      haiku: deepseek-v4-flash
+    pricing:
+      input: 0.42
+      output: 0.83
+
+  # ─── MiniMax ─────────────────────────────────────────────────────
+  minimax:
+    type: anthropic
+    base_url: https://api.minimax.io/anthropic
+    api_key: "${MINIMAX_API_KEY}"
+    models:
+      opus: MiniMax-M3
+      sonnet: MiniMax-M3
+      haiku: MiniMax-M3
+    pricing:
+      input: 0.30
+      output: 1.20
+
+  # ─── GLM (z.ai) ──────────────────────────────────────────────────
+  glm51:
+    type: anthropic
+    base_url: https://api.z.ai/api/anthropic
+    api_key: "${GLM_API_KEY}"
+    models:
+      opus: glm-5.1
+      sonnet: glm-5.1
+      haiku: glm-5.1
+    pricing:
+      input: 0.959
+      output: 3.836
+
+  glm52:
+    type: anthropic
+    base_url: https://api.z.ai/api/anthropic
+    api_key: "${GLM_API_KEY}"
+    models:
+      opus: glm-5.2
+      sonnet: glm-5.2
+      haiku: glm-5.2
+    pricing:
+      input: 1.096
+      output: 3.835
+
+  # ─── Kimi ────────────────────────────────────────────────────────
+  kimi:
+    type: anthropic
+    base_url: https://api.kimi.com/coding/
+    api_key: "${KIMI_API_KEY}"
+    models:
+      opus: kimi-k2.6
+      sonnet: kimi-k2.6
+      haiku: kimi-k2.6
+    pricing:
+      input: 0.89
+      output: 3.74
+
+  kimi-k2.7-code:
+    type: deepseek
+    base_url: https://api.kimi.com/coding/
+    api_key: "${KIMI_API_KEY}"
+    context_window: 256000
+    models:
+      opus: kimi-k2.7-code
+      sonnet: kimi-k2.7-code
+      haiku: kimi-k2.7-code
+    pricing:
+      input: 0.89
+      output: 3.699
+
+  # ─── Qwen (Alibaba) ──────────────────────────────────────────────
+  qwen3.7-max:
+    type: anthropic
+    base_url: https://dashscope-intl.aliyuncs.com/apps/anthropic
+    api_key: "${QWEN_API_KEY}"
+    models:
+      opus: qwen3.7-max
+      sonnet: qwen3.7-max
+      haiku: qwen3.7-max
+    pricing:
+      input: 0.822
+      output: 2.466
+
+  # ─── MIMO (Xiaomi) ───────────────────────────────────────────────
+  mimo:
+    type: anthropic
+    base_url: https://api.xiaomimimo.com/anthropic
+    api_key: "${MIMO_API_KEY}"
+    models:
+      opus: mimo-v2.5-pro
+      sonnet: mimo-v2.5-pro
+      haiku: mimo-v2.5-pro
+    pricing:
+      input: 0.411
+      output: 0.822
