@@ -182,6 +182,18 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 		}
 	}
 
+	// Strip output_config for non-Anthropic backends.
+	// output_config.effort is Anthropic-specific; third-party backends
+	// (qwen, mimo, minimax, glm, kimi, deepseek) don't understand it
+	// and may return 400.
+	if !backend.IsAnthropicAPI() {
+		if _, ok := parsed["output_config"]; ok {
+			delete(parsed, "output_config")
+			changed = true
+			logx.Debug("Stripped output_config (non-Anthropic backend: %s)", activeName)
+		}
+	}
+
 	// Inject output_config.effort for deepseek backends if configured.
 	// Only when thinking is enabled — otherwise deepseek rejects it.
 	if eff := backend.ReasoningEffort(); eff != "" {
@@ -232,19 +244,6 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 			outInfo = fmt.Sprintf("%v", o)
 		}
 		logx.Debug("Final body fields -> thinking=%s context_management=%s output_config=%s", thinkInfo, ctxInfo, outInfo)
-	}
-
-	// Debug: log top-level keys and message count for anthropic-type backends.
-	if backend.NeedsThinkingStrip() {
-		keys := make([]string, 0, len(parsed))
-		for k := range parsed {
-			keys = append(keys, k)
-		}
-		msgCount := 0
-		if msgs, ok := parsed["messages"].([]interface{}); ok {
-			msgCount = len(msgs)
-		}
-		logx.Debug("Transformed body: keys=%v messages=%d", keys, msgCount)
 	}
 
 	return newBody, originalModel
