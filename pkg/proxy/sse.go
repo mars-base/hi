@@ -234,6 +234,19 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 		logx.Debug("Final body fields -> thinking=%s context_management=%s output_config=%s", thinkInfo, ctxInfo, outInfo)
 	}
 
+	// Debug: log top-level keys and message count for anthropic-type backends.
+	if backend.NeedsThinkingStrip() {
+		keys := make([]string, 0, len(parsed))
+		for k := range parsed {
+			keys = append(keys, k)
+		}
+		msgCount := 0
+		if msgs, ok := parsed["messages"].([]interface{}); ok {
+			msgCount = len(msgs)
+		}
+		logx.Debug("Transformed body: keys=%v messages=%d", keys, msgCount)
+	}
+
 	return newBody, originalModel
 }
 
