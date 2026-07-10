@@ -167,6 +167,13 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 						filtered = append(filtered, block)
 					}
 					msgMap["content"] = filtered
+					// If stripping left the content empty, insert a placeholder
+					// text block. Upstream APIs reject empty content arrays.
+					if len(filtered) == 0 {
+						msgMap["content"] = []interface{}{
+							map[string]interface{}{"type": "text", "text": "..."},
+						}
+					}
 				}
 			}
 		}
@@ -330,6 +337,10 @@ func (ps *ProxyState) processResponse(w http.ResponseWriter, r *http.Request, re
 // processSSEResponse streams an SSE response with usage normalization.
 // originalModel is restored in message_start events so Claude Code sees its own model name.
 func (ps *ProxyState) processSSEResponse(w http.ResponseWriter, resp *http.Response, backendName string, originalModel string) {
+	// Capture the first part of the body when the upstream returns an error.
+	// 4xx/5xx SSE responses contain an error message that we want to log for debugging.
+	isError := resp.StatusCode >= 400
+
 	// Copy headers.
 	ps.copyHeaders(w, resp)
 	w.WriteHeader(resp.StatusCode)
@@ -346,6 +357,7 @@ func (ps *ProxyState) processSSEResponse(w http.ResponseWriter, resp *http.Respo
 
 	var inputTokens, outputTokens int64
 	var eventBuf strings.Builder
+	var errorBuf strings.Builder // Collects first events when isError=true
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -357,6 +369,10 @@ func (ps *ProxyState) processSSEResponse(w http.ResponseWriter, resp *http.Respo
 			event := eventBuf.String()
 			eventBuf.Reset()
 
+			if isError && errorBuf.Len() < 4096 {
+				errorBuf.WriteString(event)
+			}
+
 			fixedEvent := ps.normalizeSSEEvent(event, &inputTokens, &outputTokens, originalModel)
 			w.Write([]byte(fixedEvent))
 			flusher.Flush()
@@ -365,9 +381,19 @@ func (ps *ProxyState) processSSEResponse(w http.ResponseWriter, resp *http.Respo
 
 	// Flush remaining buffer.
 	if eventBuf.Len() > 0 {
-		fixedEvent := ps.normalizeSSEEvent(eventBuf.String(), &inputTokens, &outputTokens, originalModel)
+		event := eventBuf.String()
+		if isError && errorBuf.Len() < 4096 {
+			errorBuf.WriteString(event)
+		}
+		fixedEvent := ps.normalizeSSEEvent(event, &inputTokens, &outputTokens, originalModel)
 		w.Write([]byte(fixedEvent))
 		flusher.Flush()
+	}
+
+	// Log the upstream error body so we can diagnose 400/500 errors.
+	if isError && errorBuf.Len() > 0 {
+		logx.Warn("#%d upstream SSE error (status=%d backend=%s): %s",
+			ps.RequestCount(), resp.StatusCode, backendName, strings.TrimSpace(errorBuf.String()))
 	}
 
 	if err := scanner.Err(); err != nil {
