@@ -185,7 +185,7 @@ func DefaultBackends() map[string]BackendConfig {
 			APIKey:  "${ANTHROPIC_API_KEY}",
 			Pricing: PricingPerMillion{Input: 3.00, Output: 15.00},
 			Models: ModelMapping{
-				Opus:   "claude-opus-4-8",
+				Opus:   "claude-opus-5",
 				Sonnet: "claude-sonnet-5",
 				Haiku:  "claude-haiku-4-5-20251001",
 			},

@@ -109,6 +109,7 @@ func newAnthropicBackend(name string, cfg config.BackendConfig) (*anthropicBacke
 			"claude-opus-4-6":            cfg.Models.Opus,
 			"claude-opus-4-7":            cfg.Models.Opus,
 			"claude-opus-4-8":            cfg.Models.Opus,
+			"claude-opus-5":              cfg.Models.Opus,
 			"claude-sonnet-4-6":          cfg.Models.Sonnet,
 			"claude-sonnet-4-5-20250929": cfg.Models.Sonnet,
 			"claude-haiku-4-5-20251001":  cfg.Models.Haiku,
@@ -142,7 +143,7 @@ func (b *anthropicBackend) MapModel(model string) string {
 
 func (b *anthropicBackend) ModelInfo() map[string]string {
 	return map[string]string{
-		"opus":   b.modelMap["claude-opus-4-8"],
+		"opus":   b.modelMap["claude-opus-5"],
 		"sonnet": b.modelMap["claude-sonnet-4-6"],
 		"haiku":  b.modelMap["claude-haiku-4-5-20251001"],
 	}
@@ -187,6 +188,7 @@ func newDeepSeekBackend(name string, cfg config.BackendConfig) (*deepseekBackend
 			"claude-opus-4-6":            cfg.Models.Opus,
 			"claude-opus-4-7":            cfg.Models.Opus,
 			"claude-opus-4-8":            cfg.Models.Opus,
+			"claude-opus-5":              cfg.Models.Opus,
 			"claude-sonnet-4-6":          cfg.Models.Sonnet,
 			"claude-sonnet-4-5-20250929": cfg.Models.Sonnet,
 			"claude-haiku-4-5-20251001":  cfg.Models.Haiku,
@@ -216,7 +218,7 @@ func (b *deepseekBackend) MapModel(model string) string {
 
 func (b *deepseekBackend) ModelInfo() map[string]string {
 	return map[string]string{
-		"opus":   b.modelMap["claude-opus-4-8"],
+		"opus":   b.modelMap["claude-opus-5"],
 		"sonnet": b.modelMap["claude-sonnet-4-6"],
 		"haiku":  b.modelMap["claude-haiku-4-5-20251001"],
 	}

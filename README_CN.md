@@ -185,7 +185,7 @@ backends:
       input: 3.00
       output: 15.00
     models:
-      opus: claude-opus-4-8
+      opus: claude-opus-5
       sonnet: claude-sonnet-4-6
       haiku: claude-haiku-4-5-20251001
 
@@ -231,7 +231,7 @@ Claude Code 使用 Anthropic 原生的模型名称。hi 自动将其重映射：
 
 | Claude 模型 | deepseek 后端 | claude 后端 |
 |-------------|---------------|-------------|
-| `claude-opus-4-8` | `deepseek-v4-pro` | `claude-opus-4-8` |
+| `claude-opus-5` | `deepseek-v4-pro` | `claude-opus-5` |
 | `claude-sonnet-4-6` | `deepseek-v4-pro` | `claude-sonnet-4-6` |
 | `claude-haiku-4-5-20251001` | `deepseek-v4-flash` | `claude-haiku-4-5-20251001` |
 
@@ -247,7 +247,7 @@ backends:
     api_key: "${ANTHROPIC_API_KEY}"
     pricing: { input: 3.00, output: 15.00 }
     models:
-      opus: claude-opus-4-8
+      opus: claude-opus-5
       sonnet: claude-sonnet-4-6
       haiku: claude-haiku-4-5-20251001
 
@@ -270,7 +270,7 @@ backends:
     strip_thinking: true      # 如果网关强制 thinking 一致性，开启此项
     pricing: { input: 0.50, output: 1.00 }
     models:
-      opus: claude-opus-4-8
+      opus: claude-opus-5
       sonnet: claude-sonnet-4-6
       haiku: claude-haiku-4-5-20251001
 ```
@@ -328,7 +328,7 @@ curl -sX POST http://127.0.0.1:18799/_proxy/mode -d 'backend=deepseek'
 [hi] INFO  Control: backend switched deepseek → claude
 [hi] INFO  New backend env:
 [hi] INFO    ANTHROPIC_MODEL                = claude-sonnet-4-6
-[hi] INFO    ANTHROPIC_DEFAULT_OPUS_MODEL   = claude-opus-4-8
+[hi] INFO    ANTHROPIC_DEFAULT_OPUS_MODEL   = claude-opus-5
 [hi] INFO    ANTHROPIC_DEFAULT_SONNET_MODEL = claude-sonnet-4-6
 [hi] INFO    ANTHROPIC_DEFAULT_HAIKU_MODEL  = claude-haiku-4-5-20251001
 ```

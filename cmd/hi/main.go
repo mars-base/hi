@@ -56,6 +56,21 @@ var (
 	version  = "dev"
 )
 
+// claudeTierModels are the canonical Claude model names injected into
+// Claude Code's environment at launch. Regardless of the active backend,
+// Claude Code always sees the real Claude model tiers; the proxy then maps
+// them to the backend's actual model names (MapModel) and maps them back
+// (reverseModelMap) on the response path.
+var claudeTierModels = struct {
+	Opus   string
+	Sonnet string
+	Haiku  string
+}{
+	Opus:   "claude-opus-5",
+	Sonnet: "claude-sonnet-5",
+	Haiku:  "claude-haiku-4-5-20251001",
+}
+
 func main() {
 	if len(os.Args) >= 2 {
 		switch os.Args[1] {
@@ -388,10 +403,10 @@ func cmdLaunch() {
 	restoreCC, _ := config.CCOverride(map[string]string{
 		"ANTHROPIC_BASE_URL":             proxyURL,
 		"ANTHROPIC_AUTH_TOKEN":           apiKey,
-		"ANTHROPIC_MODEL":                cfg.Backends[backend].Models.Sonnet,
-		"ANTHROPIC_DEFAULT_OPUS_MODEL":   cfg.Backends[backend].Models.Opus,
-		"ANTHROPIC_DEFAULT_SONNET_MODEL": cfg.Backends[backend].Models.Sonnet,
-		"ANTHROPIC_DEFAULT_HAIKU_MODEL":     cfg.Backends[backend].Models.Haiku,
+		"ANTHROPIC_MODEL":                claudeTierModels.Sonnet,
+		"ANTHROPIC_DEFAULT_OPUS_MODEL":   claudeTierModels.Opus,
+		"ANTHROPIC_DEFAULT_SONNET_MODEL": claudeTierModels.Sonnet,
+		"ANTHROPIC_DEFAULT_HAIKU_MODEL":     claudeTierModels.Haiku,
 		"CLAUDE_CODE_AUTO_COMPACT_WINDOW":   fmt.Sprintf("%d", cfg.Env.AutoCompactWindow),
 		"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE":   fmt.Sprintf("%d", cfg.Env.AutocompactPctOverride),
 	}, !preserveStatusline())
@@ -400,10 +415,10 @@ func cmdLaunch() {
 	logx.Info("Launching Claude Code with environment:")
 	logx.Info("  ANTHROPIC_BASE_URL             = %s", proxyURL)
 	logx.Info("  ANTHROPIC_AUTH_TOKEN           = %s", maskKey(apiKey))
-	logx.Info("  ANTHROPIC_MODEL                = %s", cfg.Backends[backend].Models.Sonnet)
-	logx.Info("  ANTHROPIC_DEFAULT_OPUS_MODEL   = %s", cfg.Backends[backend].Models.Opus)
-	logx.Info("  ANTHROPIC_DEFAULT_SONNET_MODEL = %s", cfg.Backends[backend].Models.Sonnet)
-	logx.Info("  ANTHROPIC_DEFAULT_HAIKU_MODEL  = %s", cfg.Backends[backend].Models.Haiku)
+	logx.Info("  ANTHROPIC_MODEL                = %s", claudeTierModels.Sonnet)
+	logx.Info("  ANTHROPIC_DEFAULT_OPUS_MODEL   = %s", claudeTierModels.Opus)
+	logx.Info("  ANTHROPIC_DEFAULT_SONNET_MODEL = %s", claudeTierModels.Sonnet)
+	logx.Info("  ANTHROPIC_DEFAULT_HAIKU_MODEL  = %s", claudeTierModels.Haiku)
 	logx.Info("  HTTP_PROXY                     = %s", proxyURL)
 	logx.Info("  HTTPS_PROXY                    = %s", proxyURL)
 	logx.Info("  ANTHROPIC_API_KEY              = <kept from settings.json>")
@@ -429,10 +444,10 @@ func cmdLaunch() {
 		fmt.Sprintf("HTTPS_PROXY=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_BASE_URL=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_AUTH_TOKEN=%s", apiKey),
-		fmt.Sprintf("ANTHROPIC_MODEL=%s", cfg.Backends[backend].Models.Sonnet),
-		fmt.Sprintf("ANTHROPIC_DEFAULT_OPUS_MODEL=%s", cfg.Backends[backend].Models.Opus),
-		fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", cfg.Backends[backend].Models.Sonnet),
-		fmt.Sprintf("ANTHROPIC_DEFAULT_HAIKU_MODEL=%s", cfg.Backends[backend].Models.Haiku),
+		fmt.Sprintf("ANTHROPIC_MODEL=%s", claudeTierModels.Sonnet),
+		fmt.Sprintf("ANTHROPIC_DEFAULT_OPUS_MODEL=%s", claudeTierModels.Opus),
+		fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", claudeTierModels.Sonnet),
+		fmt.Sprintf("ANTHROPIC_DEFAULT_HAIKU_MODEL=%s", claudeTierModels.Haiku),
 	)
 	claudeCmd.Env = env
 
@@ -496,10 +511,10 @@ func cmdAgent() {
 	restoreCC, _ := config.CCOverride(map[string]string{
 		"ANTHROPIC_BASE_URL":             proxyURL,
 		"ANTHROPIC_AUTH_TOKEN":           apiKey,
-		"ANTHROPIC_MODEL":                bc.Models.Sonnet,
-		"ANTHROPIC_DEFAULT_OPUS_MODEL":   bc.Models.Opus,
-		"ANTHROPIC_DEFAULT_SONNET_MODEL": bc.Models.Sonnet,
-		"ANTHROPIC_DEFAULT_HAIKU_MODEL":     bc.Models.Haiku,
+		"ANTHROPIC_MODEL":                claudeTierModels.Sonnet,
+		"ANTHROPIC_DEFAULT_OPUS_MODEL":   claudeTierModels.Opus,
+		"ANTHROPIC_DEFAULT_SONNET_MODEL": claudeTierModels.Sonnet,
+		"ANTHROPIC_DEFAULT_HAIKU_MODEL":     claudeTierModels.Haiku,
 		"CLAUDE_CODE_AUTO_COMPACT_WINDOW":   fmt.Sprintf("%d", cfg.Env.AutoCompactWindow),
 		"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE":   fmt.Sprintf("%d", cfg.Env.AutocompactPctOverride),
 	}, !preserveStatusline())
@@ -529,10 +544,10 @@ func cmdAgent() {
 		fmt.Sprintf("HTTPS_PROXY=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_BASE_URL=%s", proxyURL),
 		fmt.Sprintf("ANTHROPIC_AUTH_TOKEN=%s", apiKey),
-		fmt.Sprintf("ANTHROPIC_MODEL=%s", bc.Models.Sonnet),
-		fmt.Sprintf("ANTHROPIC_DEFAULT_OPUS_MODEL=%s", bc.Models.Opus),
-		fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", bc.Models.Sonnet),
-		fmt.Sprintf("ANTHROPIC_DEFAULT_HAIKU_MODEL=%s", bc.Models.Haiku),
+		fmt.Sprintf("ANTHROPIC_MODEL=%s", claudeTierModels.Sonnet),
+		fmt.Sprintf("ANTHROPIC_DEFAULT_OPUS_MODEL=%s", claudeTierModels.Opus),
+		fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", claudeTierModels.Sonnet),
+		fmt.Sprintf("ANTHROPIC_DEFAULT_HAIKU_MODEL=%s", claudeTierModels.Haiku),
 	)
 	claudeCmd.Env = env
 

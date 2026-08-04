@@ -26,7 +26,7 @@ import (
 // both → "deepseek-v4-pro"), the first match wins the reverse mapping.
 var tierToClaudeModel = [][2]string{
 	{"sonnet", "claude-sonnet-4-6"},
-	{"opus", "claude-opus-4-8"},
+	{"opus", "claude-opus-5"},
 	{"haiku", "claude-haiku-4-5-20251001"},
 }
 
