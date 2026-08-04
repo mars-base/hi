@@ -25,7 +25,7 @@ import (
 // When multiple tiers map to the same backend model (e.g. deepseek opus AND sonnet
 // both → "deepseek-v4-pro"), the first match wins the reverse mapping.
 var tierToClaudeModel = [][2]string{
-	{"sonnet", "claude-sonnet-4-6"},
+	{"sonnet", "claude-sonnet-5"},
 	{"opus", "claude-opus-5"},
 	{"haiku", "claude-haiku-4-5-20251001"},
 }
@@ -75,7 +75,7 @@ type ProxyState struct {
 	backends map[string]Backend
 
 	// reverseModelMap maps backend-specific model names back to canonical Claude model names.
-	// E.g. "deepseek-v4-pro" → "claude-sonnet-4-6", enabling cross-backend model remapping
+	// E.g. "deepseek-v4-pro" → "claude-sonnet-5", enabling cross-backend model remapping
 	// when Claude Code reuses a previous backend's model name in subsequent requests.
 	reverseModelMap map[string]string
 
