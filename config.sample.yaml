@@ -4,6 +4,7 @@
 #   cp config.sample.yaml ~/.hi/config.yaml
 
 active_backend: deepseek
+proxy_host: 127.0.0.1                    # default; use 0.0.0.0 to listen on all interfaces
 proxy_port: 18799
 
 env:

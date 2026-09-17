@@ -170,6 +170,7 @@ type CCEnvConfig struct {
 // Config is the root configuration structure.
 type Config struct {
 	ActiveBackend string                   `yaml:"active_backend"`
+	ProxyHost     string                   `yaml:"proxy_host"`
 	ProxyPort     int                      `yaml:"proxy_port"`
 	Backends      map[string]BackendConfig `yaml:"backends"`
 	Env           CCEnvConfig              `yaml:"env"`
@@ -209,6 +210,7 @@ func DefaultConfig() *Config {
 	disableTraffic := true
 	return &Config{
 		ActiveBackend: "deepseek",
+		ProxyHost:     "127.0.0.1",
 		ProxyPort:     18799,
 		Backends:      DefaultBackends(),
 		Env: CCEnvConfig{
@@ -268,6 +270,9 @@ func Load() (*Config, error) {
 	}
 	if cfg.ProxyPort == 0 {
 		cfg.ProxyPort = defaults.ProxyPort
+	}
+	if cfg.ProxyHost == "" {
+		cfg.ProxyHost = defaults.ProxyHost
 	}
 	if cfg.ActiveBackend == "" {
 		cfg.ActiveBackend = defaults.ActiveBackend

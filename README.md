@@ -198,6 +198,7 @@ First run of `hi status` auto-generates `~/.hi/config.yaml`:
 
 ```yaml
 active_backend: deepseek
+proxy_host: 127.0.0.1   # use 0.0.0.0 to listen on all interfaces
 proxy_port: 18799
 
 env:

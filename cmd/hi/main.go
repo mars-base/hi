@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -37,6 +38,7 @@ Commands:
 Options:
   -b, --backend <name>   Backend to use (default: deepseek)
   -p, --port <port>      Proxy port (default: 18799)
+  -H, --host <host>      Proxy listen host (default: 127.0.0.1; use 0.0.0.0 to listen on all interfaces)
   --log-level <level>    debug | info | warn | error (default: info)
   --log-file <path>      Write logs to file (default: ~/.hi/logs/hi.log)
   --preserve-statusline  Keep the existing statusLine command (don't replace with hi)
@@ -146,7 +148,7 @@ func cmdStatus() {
 		fmt.Printf("Claude:  detected at %s\n", ccSettings)
 	}
 
-	fmt.Printf("Proxy:   http://127.0.0.1:%d\n", cfg.ProxyPort)
+	fmt.Printf("Proxy:   http://%s:%d\n", cfg.ProxyHost, cfg.ProxyPort)
 	fmt.Printf("Active:  %s\n", cfg.ActiveBackend)
 	if lf := logx.FilePath(); lf != "" {
 		fmt.Printf("Log:     %s (level=%s)\n", lf, logLevel)
@@ -315,6 +317,8 @@ func cmdProxy() {
 		}
 	}
 
+	applyListenFlags(cfg)
+
 	logx.Info("hi %s — Claude Code multi-backend proxy", version)
 	logx.Info("Config:   ~/.hi/config.yaml")
 	logx.Info("Backends: claude, deepseek")
@@ -353,6 +357,8 @@ func cmdLaunch() {
 	if _, ok := cfg.Backends[backend]; !ok {
 		logx.Fatalf("Unknown backend: %s (available: claude, deepseek)", backend)
 	}
+
+	applyListenFlags(cfg)
 
 	errCh, shutdown, err := proxy.StartServerInBackground(cfg)
 	if err != nil {
@@ -613,6 +619,43 @@ func parseBackend() string {
 		}
 	}
 	return ""
+}
+
+func parseHost() string {
+	for i, arg := range os.Args {
+		if (arg == "--host" || arg == "-H") && i+1 < len(os.Args) {
+			return os.Args[i+1]
+		}
+	}
+	return ""
+}
+
+func parsePort() int {
+	for i, arg := range os.Args {
+		if (arg == "--port" || arg == "-p") && i+1 < len(os.Args) {
+			p, err := strconv.Atoi(os.Args[i+1])
+			if err != nil {
+				logx.Fatalf("Invalid port: %s", os.Args[i+1])
+			}
+			return p
+		}
+	}
+	return 0
+}
+
+// applyListenFlags overrides the proxy listen address from --host/--port for
+// this run only. The values are not persisted to config.yaml, since clients
+// keep connecting via the loopback address.
+func applyListenFlags(cfg *config.Config) {
+	if h := parseHost(); h != "" {
+		cfg.ProxyHost = h
+	}
+	if p := parsePort(); p != 0 {
+		if p < 1 || p > 65535 {
+			logx.Fatalf("Port out of range: %d", p)
+		}
+		cfg.ProxyPort = p
+	}
 }
 
 func parseLogLevelFlag() string {

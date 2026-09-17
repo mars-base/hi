@@ -169,6 +169,7 @@ hi 兼容任意 Anthropic 兼容 API。以下是官方支持的提供商及其�
 
 ```yaml
 active_backend: deepseek
+proxy_host: 127.0.0.1   # 设为 0.0.0.0 可监听所有网卡
 proxy_port: 18799
 
 env:

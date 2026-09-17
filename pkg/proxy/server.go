@@ -429,7 +429,12 @@ func StartServer(cfg *config.Config) error {
 	}
 	defer state.Close()
 
-	addr := fmt.Sprintf("127.0.0.1:%d", cfg.ProxyPort)
+	addr := fmt.Sprintf("%s:%d", cfg.ProxyHost, cfg.ProxyPort)
+	// 0.0.0.0 is a bind address, not a connectable one — show loopback in URLs.
+	displayAddr := addr
+	if cfg.ProxyHost == "0.0.0.0" || cfg.ProxyHost == "::" {
+		displayAddr = fmt.Sprintf("127.0.0.1:%d", cfg.ProxyPort)
+	}
 
 	// Pre-acquire listener to detect port conflicts before printing startup banner.
 	ln, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", addr)
@@ -446,12 +451,12 @@ func StartServer(cfg *config.Config) error {
 	}
 
 	logx.Info("Proxy listening on %s (active: %s)", addr, state.ActiveName())
-	logx.Info("Control: curl -s http://%s/_proxy/status", addr)
-	logx.Info("Switch:  curl -sX POST http://%s/_proxy/mode -d 'backend=deepseek'", addr)
+	logx.Info("Control: curl -s http://%s/_proxy/status", displayAddr)
+	logx.Info("Switch:  curl -sX POST http://%s/_proxy/mode -d 'backend=deepseek'", displayAddr)
 
-	fmt.Printf("hi: Proxy started at http://%s (backend: %s)\n", addr, state.ActiveName())
-	fmt.Printf("hi: Status:  curl -s http://%s/_proxy/status\n", addr)
-	fmt.Printf("hi: Switch:  curl -sX POST http://%s/_proxy/mode -d 'backend=<name>'\n", addr)
+	fmt.Printf("hi: Proxy started at http://%s (backend: %s)\n", displayAddr, state.ActiveName())
+	fmt.Printf("hi: Status:  curl -s http://%s/_proxy/status\n", displayAddr)
+	fmt.Printf("hi: Switch:  curl -sX POST http://%s/_proxy/mode -d 'backend=<name>'\n", displayAddr)
 	fmt.Println()
 
 	// Graceful shutdown on SIGINT / SIGTERM.
@@ -486,7 +491,7 @@ func StartServerInBackground(cfg *config.Config) (<-chan error, func(), error) {
 		return nil, nil, fmt.Errorf("failed to create proxy state: %w", err)
 	}
 
-	addr := fmt.Sprintf("127.0.0.1:%d", cfg.ProxyPort)
+	addr := fmt.Sprintf("%s:%d", cfg.ProxyHost, cfg.ProxyPort)
 
 	// Acquire the listener first so port-in-use is detected immediately,
 	// before we risk a false-positive from polling another proxy's endpoint.
