@@ -39,6 +39,7 @@ Options:
   -b, --backend <name>   Backend to use (default: deepseek)
   -p, --port <port>      Proxy port (default: 18799)
   -H, --host <host>      Proxy listen host (default: 127.0.0.1; use 0.0.0.0 to listen on all interfaces)
+  --proxy-host <host>    Host advertised to Claude Code as ANTHROPIC_BASE_URL (default: 127.0.0.1; set a routable IP so clients on other machines can reach the proxy)
   --log-level <level>    debug | info | warn | error (default: info)
   --log-file <path>      Write logs to file (default: ~/.hi/logs/hi.log)
   --preserve-statusline  Keep the existing statusLine command (don't replace with hi)
@@ -383,8 +384,8 @@ func cmdLaunch() {
 	cfgPath, _ := config.Path()
 	fmt.Printf("\nhi: Claude Code starting with backend: %s\n", backend)
 	fmt.Printf("hi: Config \u2192 %s\n", cfgPath)
-	fmt.Printf("hi: Proxy  at http://127.0.0.1:%d\n", cfg.ProxyPort)
-	fmt.Printf("hi: Switch backend: curl -sX POST http://127.0.0.1:%d/_proxy/mode -d 'backend=<name>'\n", cfg.ProxyPort)
+	fmt.Printf("hi: Proxy  at http://%s:%d\n", proxyAdvertiseHost(), cfg.ProxyPort)
+	fmt.Printf("hi: Switch backend: curl -sX POST http://%s:%d/_proxy/mode -d 'backend=<name>'\n", proxyAdvertiseHost(), cfg.ProxyPort)
 	if lf := logx.FilePath(); lf != "" {
 		fmt.Printf("hi: Logs → %s (level=%s)\n", lf, logLevel)
 	}
@@ -401,7 +402,7 @@ func cmdLaunch() {
 	claudeCmd.Stderr = os.Stderr
 
 	apiKey := config.ResolveAPIKey(cfg.Backends[backend].APIKey)
-	proxyURL := fmt.Sprintf("http://127.0.0.1:%d", cfg.ProxyPort)
+	proxyURL := fmt.Sprintf("http://%s:%d", proxyAdvertiseHost(), cfg.ProxyPort)
 
 	// Temporarily patch ~/.claude/settings.json so Claude Code reads
 	// hi's env vars instead of the persisted ones. ANTHROPIC_API_KEY
@@ -506,7 +507,7 @@ func cmdAgent() {
 	}
 
 	apiKey := config.ResolveAPIKey(bc.APIKey)
-	proxyURL := fmt.Sprintf("http://127.0.0.1:%d", cfg.ProxyPort)
+	proxyURL := fmt.Sprintf("http://%s:%d", proxyAdvertiseHost(), cfg.ProxyPort)
 
 	fmt.Printf("\nhi: Claude Code agent starting (backend: %s, proxy: %s)\n", backend, proxyURL)
 	fmt.Printf("hi: Hot-switch: curl -sX POST %s/_proxy/mode -d 'backend=<name>'\n", proxyURL)
@@ -656,6 +657,27 @@ func applyListenFlags(cfg *config.Config) {
 		}
 		cfg.ProxyPort = p
 	}
+}
+
+func parseProxyHost() string {
+	for i, arg := range os.Args {
+		if arg == "--proxy-host" && i+1 < len(os.Args) {
+			return os.Args[i+1]
+		}
+	}
+	return ""
+}
+
+// proxyAdvertiseHost returns the host advertised to Claude Code as
+// ANTHROPIC_BASE_URL. Defaults to 127.0.0.1; override with --proxy-host to
+// point clients (e.g. Claude Code on another machine) at a reachable address.
+// This is independent of --host (the listen address): the proxy may bind
+// 0.0.0.0 while advertising a specific routable IP.
+func proxyAdvertiseHost() string {
+	if h := parseProxyHost(); h != "" {
+		return h
+	}
+	return "127.0.0.1"
 }
 
 func parseLogLevelFlag() string {
