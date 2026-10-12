@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -529,7 +531,8 @@ func cmdAgent() {
 	// Generate slash commands so this agent has /deepseek /claude.
 	config.GenerateSlashCommands(cfg)
 
-	claudeCmd := exec.Command("claude")
+	claudeArgs := resumeArgs()
+	claudeCmd := exec.Command("claude", claudeArgs...)
 	claudeCmd.Stdin = os.Stdin
 	claudeCmd.Stdout = os.Stdout
 	claudeCmd.Stderr = os.Stderr
@@ -619,6 +622,71 @@ func parseBackend() string {
 		}
 	}
 	return ""
+}
+
+// projectSessions lists Claude Code session transcripts saved for dir
+// (newest first). Layout: ~/.claude/projects/<path with every
+// non-alphanumeric char replaced by '-'>/<uuid>.jsonl
+func projectSessions(dir string) []string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil
+	}
+	escaped := strings.Map(func(r rune) rune {
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' {
+			return r
+		}
+		return '-'
+	}, dir)
+	entries, err := filepath.Glob(filepath.Join(home, ".claude", "projects", escaped, "*.jsonl"))
+	if err != nil || len(entries) == 0 {
+		return nil
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		mi, mj := sessionMtime(entries[i]), sessionMtime(entries[j])
+		if mi.Equal(mj) {
+			return entries[i] > entries[j]
+		}
+		return mi.After(mj)
+	})
+	return entries
+}
+
+func sessionMtime(path string) time.Time {
+	if fi, err := os.Stat(path); err == nil {
+		return fi.ModTime()
+	}
+	return time.Time{}
+}
+
+// resumeArgs asks whether to attach to an existing session for the current
+// directory. Returns claude args to resume (--resume opens the native
+// picker, --continue attaches the most recent session directly).
+func resumeArgs() []string {
+	for _, a := range os.Args[2:] {
+		if a == "--resume" || a == "-r" || a == "--continue" || a == "-c" {
+			return nil // user already chose
+		}
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil
+	}
+	sessions := projectSessions(cwd)
+	if len(sessions) == 0 {
+		return nil
+	}
+	fmt.Printf("hi: %d previous session(s) found for this project.\n", len(sessions))
+	fmt.Print("Resume one? [r] resume picker / [c] continue most recent / [Enter] start fresh: ")
+	reader := bufio.NewReader(os.Stdin)
+	answer, _ := reader.ReadString('\n')
+	switch strings.ToLower(strings.TrimSpace(answer)) {
+	case "r", "resume":
+		return []string{"--resume"}
+	case "c", "continue":
+		return []string{"--continue"}
+	}
+	return nil
 }
 
 func parseHost() string {
