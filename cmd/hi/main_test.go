@@ -9,7 +9,9 @@ import (
 
 func TestProjectSessions(t *testing.T) {
 	home := t.TempDir()
+	// os.UserHomeDir reads $HOME on unix and %USERPROFILE% on Windows.
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 
 	// /tmp/fake_proj.x → dash-escaping of '/', '_', '.'
 	dir := "/tmp/fake_proj.x"
