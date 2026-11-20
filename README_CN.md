@@ -17,7 +17,7 @@
 
 hi 目前优先支持 Claude Code——即使市面上已经有很多 harness agent 工具，CC 依然是最出色的之一。但 CC 的价格也是最贵的，对于重度使用 harness agent、手头预算并不宽裕的普通人来说，费用难以承受。而 DeepSeek 是全球最实惠的大模型之一，将 CC 和 DeepSeek 结合起来，是非常棒的组合——顶级的 agent 能力，极低的成本。
 
-后续 hi 计划支持更广泛的 agent 工具以及 OpenAI 协议接口，成为一个通用的多后端代理。
+从 **v1.7.1** 起，hi 支持 `openai-response` 后端，可将 Claude Code 的 Anthropic Messages 请求转换为 OpenAI Responses API 请求，并将响应转换回来。
 
 ## 快速开始
 
@@ -146,7 +146,7 @@ tail -f /tmp/hi-$(date +%F).log | grep -E "#[0-9]|Control:|backend |env:"
 
 ## 支持的大模型
 
-hi 兼容任意 Anthropic 兼容 API。以下是官方支持的提供商及其端点：
+hi 兼容任意 Anthropic API。除此之外，**任何提供 OpenAI Responses API 的大模型服务提供商**，都可以通过 `openai-response` 后端接入，不限于特定网关。以下是官方支持的提供商及其端点：
 
 | 提供商 | 类型 | Base URL | 官方文档 |
 |--------|------|----------|----------|
@@ -157,7 +157,7 @@ hi 兼容任意 Anthropic 兼容 API。以下是官方支持的提供商及其�
 | Kimi | `anthropic` | `https://api.kimi.com/coding/` | [文档](https://www.kimi.com/code/docs/en/) |
 | Qwen（阿里通义） | `anthropic` | `https://dashscope-intl.aliyuncs.com/apps/anthropic` | [Claude Code 指南](https://www.alibabacloud.com/help/en/model-studio/claude-code) |
 | MIMO（小米） | `anthropic` | `https://api.xiaomimimo.com/anthropic` | [文档](https://platform.xiaomimimo.com/docs/en-US/api/chat/anthropic-api) |
-| OpenAI Responses（任意网关） | `openai-response` | 例：`https://ai.leihuo.netease.com` | — |
+| OpenAI Responses（兼容网关） | `openai-response` | 按服务商提供的 Responses API 地址配置 | — |
 
 > `openai-response` 后端由 hi 在代理层完成 Anthropic Messages ↔ OpenAI Responses
 > 双向转换：Claude Code 仍然只发 `/v1/messages`，hi 转发到上游 `/v1/responses`，
@@ -165,15 +165,15 @@ hi 兼容任意 Anthropic 兼容 API。以下是官方支持的提供商及其�
 > 目前不合成 Anthropic thinking 块。示例：
 
 ```yaml
-gpt-6-luna:
+my-openai-backend:
   type: openai-response
-  base_url: https://ai.leihuo.netease.com
-  api_key: "${GPT_API_KEY}"
+  base_url: https://api.example.com
+  api_key: "${OPENAI_API_KEY}"
   # reasoning_effort: low
   models:
-    opus: gpt-6-luna
-    sonnet: gpt-6-luna
-    haiku: gpt-6-luna
+    opus: gpt-model
+    sonnet: gpt-model
+    haiku: gpt-model
 ```
 
 > **Kimi K2.7-code**（256K 上下文窗口）也已支持，后端类型可配置为 `deepseek`。

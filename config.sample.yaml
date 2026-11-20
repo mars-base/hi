@@ -45,19 +45,16 @@ backends:
   # new-api style gateway). hi converts Claude Code's /v1/messages
   # requests to /v1/responses and converts the replies back, including
   # streaming and tool calls.
-  gpt-6-luna:
+  openai-responses:
     type: openai-response
-    base_url: https://ai.leihuo.netease.com
-    api_key: "${GPT_API_KEY}"
+    base_url: https://api.example.com
+    api_key: "${OPENAI_API_KEY}"
     # reasoning_effort: low        # optional: low/medium/high/xhigh/max
     # context_window: 400000       # optional, for statusline
     models:
-      opus: gpt-6-luna
-      sonnet: gpt-6-luna
-      haiku: gpt-6-luna
-    pricing:
-      input: 0.42
-      output: 0.83
+      opus: gpt-model
+      sonnet: gpt-model
+      haiku: gpt-model
 
   # ─── MiniMax ─────────────────────────────────────────────────────
   minimax:

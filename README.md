@@ -40,8 +40,7 @@ affordable large models in the world. Pairing Claude Code with DeepSeek makes
 for a fantastic combination: top-tier agent capabilities at a fraction of the
 price.
 
-Looking ahead, hi plans to support more agent tools and the OpenAI API
-protocol, making it a universal multi-backend proxy.
+Since **v1.7.1**, hi supports the `openai-response` backend, translating Claude Code's Anthropic Messages requests to the OpenAI Responses API and converting responses back.
 
 ## Quick start
 
@@ -171,7 +170,7 @@ automatically:
 
 ## Supported Models
 
-hi works with any Anthropic‑compatible API. Here are the officially supported
+hi works with any Anthropic‑compatible API. In addition, **any LLM provider that offers an OpenAI Responses API** can be used through the `openai-response` backend; it is not limited to a particular gateway. Here are the officially supported
 providers and their endpoints:
 
 | Provider | Type | Base URL | Official Guide |
@@ -183,6 +182,25 @@ providers and their endpoints:
 | Kimi | `anthropic` | `https://api.kimi.com/coding/` | [Docs](https://www.kimi.com/code/docs/en/) |
 | Qwen (Alibaba) | `anthropic` | `https://dashscope-intl.aliyuncs.com/apps/anthropic` | [Claude Code Guide](https://www.alibabacloud.com/help/en/model-studio/claude-code) |
 | MIMO (Xiaomi) | `anthropic` | `https://api.xiaomimimo.com/anthropic` | [Docs](https://platform.xiaomimimo.com/docs/en-US/api/chat/anthropic-api) |
+| OpenAI Responses (compatible gateways) | `openai-response` | Configure the provider's Responses API endpoint | — |
+
+> The `openai-response` backend translates Anthropic Messages ↔ OpenAI Responses in hi.
+> Claude Code continues sending `/v1/messages`; hi forwards to `/v1/responses` and converts
+> the response back, including streaming, tool calls, and images. `count_tokens` is estimated
+> locally. Upstream reasoning output is not currently returned as Anthropic thinking blocks.
+> Example:
+
+```yaml
+my-openai-backend:
+  type: openai-response
+  base_url: https://api.example.com
+  api_key: "${OPENAI_API_KEY}"
+  # reasoning_effort: low
+  models:
+    opus: gpt-model
+    sonnet: gpt-model
+    haiku: gpt-model
+```
 
 > **Kimi K2.7‑code** (256K context window) is supported as a `deepseek`‑type
 > backend. Set `context_window: 256000` in your config for accurate statusline
@@ -316,7 +334,7 @@ Key points:
 - `models.opus/sonnet/haiku` — maps Claude model names to backend‑specific IDs
 - `pricing` — USD per 1M tokens, used by cost tracking
 - `context_window` — max context window size in tokens for statusline display. Default: ``1000000`` for `deepseek`, ``200000`` for other types
-- `reasoning_effort` — sets `output_config.effort` for deepseek backends: `max` / `high`. Empty to disable. Default: empty
+- `reasoning_effort` — `deepseek` uses `output_config.effort` (`max` / `high`); `openai-response` uses `reasoning.effort` (`low` / `medium` / `high` / `xhigh` / `max`, inferred from thinking config when unset, defaulting to `low`). Empty means no explicit override. Default: empty
 - `env` — environment variables passed to Claude Code at launch:
   - `auto_compact_window` — auto-compact trigger window. Default: ``200000``
   - `autocompact_pct_override` — compact at this percentage of window. Default: ``64`` (128K trigger)
