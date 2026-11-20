@@ -32,7 +32,7 @@ hi 目前优先支持 Claude Code——即使市面上已经有很多 harness ag
 
 | 特性 | 状态 |
 |------|------|
-| Claude Code 版本 | 已测试至 **2.1.172** |
+| Claude Code 版本 | 已测试至 **2.1.220** |
 | 后端热切换 | ✅ Claude、DeepSeek 及所有自定义后端 |
 | Web Search | ✅ 所有支持的模型上均可用 |
   - 你所在组织的内部 API 网关 key

@@ -55,7 +55,7 @@ Since **v1.7.1**, hi supports the `openai-response` backend, translating Claude 
 
 | Feature | Status |
 |---------|--------|
-| Claude Code version | Tested up to **2.1.172** |
+| Claude Code version | Tested up to **2.1.220** |
 | Hot-switch backends | ✅ Claude, DeepSeek, and all custom backends |
 | Web Search | ✅ Works on all supported models |
 
