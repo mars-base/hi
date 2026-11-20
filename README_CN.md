@@ -37,7 +37,41 @@ hi 目前优先支持 Claude Code——即使市面上已经有很多 harness ag
 | Web Search | ✅ 所有支持的模型上均可用 |
   - 你所在组织的内部 API 网关 key
 
-### 安装（Linux / macOS）
+### 安装 Claude Code（命令行）
+
+**Linux：**
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+指定版本安装（例如 `2.1.220`）：
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash -s -- 2.1.220
+```
+
+**macOS（Homebrew）：**
+
+```bash
+brew install --cask claude-code
+```
+
+**Windows（WinGet）：**
+
+```powershell
+winget install Anthropic.ClaudeCode
+```
+
+使用 WinGet 指定版本时添加 `--version`，例如：
+
+```powershell
+winget install Anthropic.ClaudeCode --version 2.1.220
+```
+
+Linux 安装脚本也接受 `stable`、`latest` 或具体版本号作为参数。Homebrew cask 安装 Homebrew 当前发布的版本。
+
+### 安装 hi（Linux / macOS）
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/scripts/install.sh | sh

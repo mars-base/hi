@@ -59,7 +59,41 @@ Since **v1.7.1**, hi supports the `openai-response` backend, translating Claude 
 | Hot-switch backends | ✅ Claude, DeepSeek, and all custom backends |
 | Web Search | ✅ Works on all supported models |
 
-### Install (Linux / macOS)
+### Install Claude Code (terminal)
+
+**Linux:**
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+To install a specific version, pass it to the installer (for example, `2.1.220`):
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash -s -- 2.1.220
+```
+
+**macOS (Homebrew):**
+
+```bash
+brew install --cask claude-code
+```
+
+**Windows (WinGet):**
+
+```powershell
+winget install Anthropic.ClaudeCode
+```
+
+To request a specific version with WinGet, add `--version`, for example:
+
+```powershell
+winget install Anthropic.ClaudeCode --version 2.1.220
+```
+
+The Linux install script also accepts `stable`, `latest`, or a version number as an argument. Homebrew cask installs the version currently published by Homebrew.
+
+### Install hi (Linux / macOS)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mars-base/hi/main/scripts/install.sh | sh
