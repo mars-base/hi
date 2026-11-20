@@ -39,6 +39,6 @@ lint:
 fmt:
 	$(GOFMT) -s -w .
 
-install:
+install: build
 	install -m 755 $(BIN) /usr/local/bin/$(BIN) 2>/dev/null || install -m 755 $(BIN) $(HOME)/.local/bin/$(BIN)
 	@echo "Installed $(BIN) to /usr/local/bin/ or ~/.local/bin/"
