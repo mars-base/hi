@@ -116,7 +116,10 @@ type PricingPerMillion struct {
 
 // BackendConfig defines a single API backend.
 type BackendConfig struct {
-	// Type is "anthropic" for Claude or "deepseek" for DeepSeek.
+	// Type is "anthropic" for Claude-compatible APIs, "deepseek" for
+	// DeepSeek, or "openai-response" for OpenAI Responses APIs. For
+	// "openai-response", the proxy converts Anthropic Messages requests
+	// to /v1/responses and converts the replies back.
 	Type string `yaml:"type"`
 	// BaseURL is the API endpoint. Empty means use the default.
 	BaseURL string `yaml:"base_url"`
@@ -135,8 +138,11 @@ type BackendConfig struct {
 	// ContextWindow is the max context window size for this backend.
 	// Used by statusline. Default: 1M for deepseek, 200k for anthropic.
 	ContextWindow *int64 `yaml:"context_window,omitempty"`
-	// ReasoningEffort sets the output_config.effort level for deepseek-type
-	// backends. Values: "high" (default), "max". Ignored for anthropic type.
+	// ReasoningEffort sets the reasoning effort for backends that support it.
+	// For "deepseek" it becomes output_config.effort (values: "high", "max").
+	// For "openai-response" it becomes reasoning.effort (values: "low",
+	// "medium", "high", "xhigh", "max"); when unset, the proxy derives it
+	// from the thinking config and defaults to "low".
 	ReasoningEffort string `yaml:"reasoning_effort,omitempty"`
 }
 

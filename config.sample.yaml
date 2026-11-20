@@ -40,6 +40,25 @@ backends:
       input: 0.42
       output: 0.83
 
+  # ─── OpenAI Responses ────────────────────────────────────────────
+  # Any endpoint implementing POST /v1/responses (OpenAI official or a
+  # new-api style gateway). hi converts Claude Code's /v1/messages
+  # requests to /v1/responses and converts the replies back, including
+  # streaming and tool calls.
+  gpt-6-luna:
+    type: openai-response
+    base_url: https://ai.leihuo.netease.com
+    api_key: "${GPT_API_KEY}"
+    # reasoning_effort: low        # optional: low/medium/high/xhigh/max
+    # context_window: 400000       # optional, for statusline
+    models:
+      opus: gpt-6-luna
+      sonnet: gpt-6-luna
+      haiku: gpt-6-luna
+    pricing:
+      input: 0.42
+      output: 0.83
+
   # ─── MiniMax ─────────────────────────────────────────────────────
   minimax:
     type: anthropic

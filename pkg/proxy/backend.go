@@ -14,10 +14,24 @@ import (
 	"github.com/mars-base/hi/pkg/config"
 )
 
+// APIKind identifies the wire protocol a backend speaks upstream.
+type APIKind int
+
+const (
+	// KindAnthropic is the native Anthropic Messages protocol.
+	KindAnthropic APIKind = iota
+	// KindOpenAIResponses is the OpenAI Responses protocol, converted
+	// to/from Anthropic Messages by the proxy.
+	KindOpenAIResponses
+)
+
 // Backend represents an upstream API backend.
 type Backend interface {
 	// Name returns the backend identifier (e.g. "claude", "deepseek").
 	Name() string
+
+	// Kind returns the backend's upstream wire protocol.
+	Kind() APIKind
 
 	// TargetURL returns the upstream API base URL.
 	TargetURL() *url.URL
@@ -59,6 +73,8 @@ func NewBackend(name string, cfg config.BackendConfig) (Backend, error) {
 		return newAnthropicBackend(name, cfg)
 	case "deepseek":
 		return newDeepSeekBackend(name, cfg)
+	case "openai-response", "openai-responses":
+		return newOpenAIResponsesBackend(name, cfg)
 	default:
 		return nil, fmt.Errorf("unknown backend type: %s", cfg.Type)
 	}
@@ -119,6 +135,7 @@ func newAnthropicBackend(name string, cfg config.BackendConfig) (*anthropicBacke
 }
 
 func (b *anthropicBackend) Name() string                { return b.name }
+func (b *anthropicBackend) Kind() APIKind               { return KindAnthropic }
 func (b *anthropicBackend) NeedsThinkingStrip() bool    { return true }
 func (b *anthropicBackend) StripTopLevelThinking() bool { return b.stripTopThink }
 func (b *anthropicBackend) ReasoningEffort() string     { return b.reasonEffort }
@@ -199,6 +216,7 @@ func newDeepSeekBackend(name string, cfg config.BackendConfig) (*deepseekBackend
 }
 
 func (b *deepseekBackend) Name() string                { return b.name }
+func (b *deepseekBackend) Kind() APIKind               { return KindAnthropic }
 func (b *deepseekBackend) NeedsThinkingStrip() bool    { return false }
 func (b *deepseekBackend) StripTopLevelThinking() bool { return b.stripTopThink }
 func (b *deepseekBackend) ReasoningEffort() string     { return b.reasonEffort }
@@ -267,6 +285,38 @@ func IsModelRequest(path string) bool {
 		path = path[:idx]
 	}
 	return path == "/v1/messages" || path == "/v1/messages/"
+}
+
+// IsCountTokensRequest returns true if the path is /v1/messages/count_tokens.
+func IsCountTokensRequest(path string) bool {
+	if idx := strings.Index(path, "?"); idx >= 0 {
+		path = path[:idx]
+	}
+	return path == "/v1/messages/count_tokens" || path == "/v1/messages/count_tokens/"
+}
+
+// backendModelMap builds the Claude model → backend model mapping used by
+// all backend types. Tiers without a configured model are omitted so that
+// MapModel falls through to the original name.
+func backendModelMap(cfg config.BackendConfig) map[string]string {
+	tiers := []struct {
+		claudeModels []string
+		target       string
+	}{
+		{[]string{"claude-opus-4-6", "claude-opus-4-7", "claude-opus-4-8", "claude-opus-5"}, cfg.Models.Opus},
+		{[]string{"claude-sonnet-4-6", "claude-sonnet-4-5-20250929", "claude-sonnet-5"}, cfg.Models.Sonnet},
+		{[]string{"claude-haiku-4-5-20251001"}, cfg.Models.Haiku},
+	}
+	m := make(map[string]string)
+	for _, t := range tiers {
+		if t.target == "" {
+			continue
+		}
+		for _, name := range t.claudeModels {
+			m[name] = t.target
+		}
+	}
+	return m
 }
 
 // --- debug helpers ---

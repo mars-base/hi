@@ -39,12 +39,12 @@ var tierToClaudeModel = [][2]string{
 // Entries with a leading dot (e.g. ".anthropic.com") match the domain and all subdomains.
 var blockedDomains = []string{
 	// Anthropic / Claude branded domains — strongly associated, no other purpose
-	"api.anthropic.com",       // metrics, telemetry, WebFetch safety check
-	"a-api.anthropic.com",     // analytics API
-	"a-cdn.anthropic.com",     // analytics CDN
-	".claude.ai",              // *.claude.ai (downloads, api, etc.)
-	".claudeusercontent.com",  // *.claudeusercontent.com (artifact viewing, bridge)
-	".claude.com",             // *.claude.com (code, console, etc.)
+	"api.anthropic.com",      // metrics, telemetry, WebFetch safety check
+	"a-api.anthropic.com",    // analytics API
+	"a-cdn.anthropic.com",    // analytics CDN
+	".claude.ai",             // *.claude.ai (downloads, api, etc.)
+	".claudeusercontent.com", // *.claudeusercontent.com (artifact viewing, bridge)
+	".claude.com",            // *.claude.com (code, console, etc.)
 }
 
 // matchBlocked returns the matching domain rule if hostname is blocked, empty string otherwise.
@@ -336,6 +336,14 @@ func (ps *ProxyState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	isModel := IsModelRequest(path)
 	activeName := ps.ActiveName()
 	backend := ps.ActiveBackend()
+
+	// Backends speaking the OpenAI Responses protocol need full request and
+	// response conversion instead of the header/body tweaks used for
+	// Anthropic-compatible upstreams.
+	if backend.Kind() == KindOpenAIResponses && (isModel || IsCountTokensRequest(path)) {
+		ps.serveOpenAIResponses(w, r, backend)
+		return
+	}
 
 	// Route ALL requests through the active backend.
 	// This ensures /login, auth validation etc. also hit the same upstream.

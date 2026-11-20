@@ -28,25 +28,13 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 
 	// Remap model name.
 	if model, ok := parsed["model"].(string); ok {
-		originalModel = model
-		mapped := backend.MapModel(model)
+		mapped, orig := ps.resolveModel(model, backend)
+		originalModel = orig
 		if mapped != model {
 			parsed["model"] = mapped
 			changed = true
-			logx.Debug("Model remap: %s → %s", model, mapped)
-		} else if claudeModel, ok := ps.reverseModelMap[model]; ok {
-			// Model didn't match a Claude name (e.g. "deepseek-v4-pro" left over
-			// from a previous backend). Reverse-lookup the canonical Claude model
-			// name, then forward-map to the current backend.
-			originalModel = claudeModel // Track the canonical Claude model name
-			mapped = backend.MapModel(claudeModel)
-			if mapped != model {
-				parsed["model"] = mapped
-				changed = true
-				logx.Debug("Model remap (reverse): %s → %s → %s", model, claudeModel, mapped)
-			}
 		}
-		logx.Debug("  final model: %s", parsed["model"])
+		logx.Debug("  final model: %s", mapped)
 	}
 
 	// Strip top-level thinking config. Some backends (e.g. DeepSeek) require
@@ -247,6 +235,27 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 	}
 
 	return newBody, originalModel
+}
+
+// resolveModel maps a client model name to the backend's model name and
+// returns the name that should be restored in responses. When the client
+// sends a stale backend model (e.g. "deepseek-v4-pro" left over after a
+// backend switch), the reverse map recovers the canonical Claude name first.
+func (ps *ProxyState) resolveModel(model string, backend Backend) (mapped, original string) {
+	original = model
+	mapped = backend.MapModel(model)
+	if mapped != model {
+		logx.Debug("Model remap: %s → %s", model, mapped)
+		return mapped, original
+	}
+	if claudeModel, ok := ps.reverseModelMap[model]; ok {
+		original = claudeModel
+		if m := backend.MapModel(claudeModel); m != model {
+			logx.Debug("Model remap (reverse): %s → %s → %s", model, claudeModel, m)
+			mapped = m
+		}
+	}
+	return mapped, original
 }
 
 // hasThinkingBlocks returns true if any assistant message in the

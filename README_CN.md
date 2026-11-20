@@ -157,6 +157,24 @@ hi 兼容任意 Anthropic 兼容 API。以下是官方支持的提供商及其�
 | Kimi | `anthropic` | `https://api.kimi.com/coding/` | [文档](https://www.kimi.com/code/docs/en/) |
 | Qwen（阿里通义） | `anthropic` | `https://dashscope-intl.aliyuncs.com/apps/anthropic` | [Claude Code 指南](https://www.alibabacloud.com/help/en/model-studio/claude-code) |
 | MIMO（小米） | `anthropic` | `https://api.xiaomimimo.com/anthropic` | [文档](https://platform.xiaomimimo.com/docs/en-US/api/chat/anthropic-api) |
+| OpenAI Responses（任意网关） | `openai-response` | 例：`https://ai.leihuo.netease.com` | — |
+
+> `openai-response` 后端由 hi 在代理层完成 Anthropic Messages ↔ OpenAI Responses
+> 双向转换：Claude Code 仍然只发 `/v1/messages`，hi 转发到上游 `/v1/responses`，
+> 支持流式、工具调用、图片与 `count_tokens`（本地估算）。上游的 reasoning 输出
+> 目前不合成 Anthropic thinking 块。示例：
+
+```yaml
+gpt-6-luna:
+  type: openai-response
+  base_url: https://ai.leihuo.netease.com
+  api_key: "${GPT_API_KEY}"
+  # reasoning_effort: low
+  models:
+    opus: gpt-6-luna
+    sonnet: gpt-6-luna
+    haiku: gpt-6-luna
+```
 
 > **Kimi K2.7-code**（256K 上下文窗口）也已支持，后端类型可配置为 `deepseek`。
 > 建议在配置中设置 `context_window: 256000`，以便状态栏正确显示剩余上下文。
@@ -284,7 +302,7 @@ backends:
 - `models.opus/sonnet/haiku` — 将 Claude 模型名映射到后端实际模型 ID
 - `pricing` — 每百万 token 的 USD 价格，用于成本追踪
 - `context_window` — 最大上下文窗口（tokens），用于状态栏显示。默认：`deepseek` 为 ``1000000``（1M），其他类型为 ``200000``
-- `reasoning_effort` — 设置 `output_config.effort`，仅 deepseek 后端有效：`max` / `high`。留空则不注入。默认：空
+- `reasoning_effort` — `deepseek` 后端写入 `output_config.effort`（`max` / `high`）；`openai-response` 后端写入 `reasoning.effort`（`low` / `medium` / `high` / `xhigh` / `max`，未设置时由 thinking 配置推导，默认 `low`）。留空则不显式注入。默认：空
 - `env` — 启动时传递给 Claude Code 的环境变量：
   - `auto_compact_window` — 自动压缩触发窗口。默认：``200000``
   - `autocompact_pct_override` — 压缩触发百分比。默认：``64``（128K 触发）
