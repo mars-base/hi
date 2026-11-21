@@ -8,9 +8,9 @@ proxy_host: 127.0.0.1                    # default; use 0.0.0.0 to listen on all
 proxy_port: 18799
 
 env:
-  auto_compact_window: 512000            # CLAUDE_CODE_AUTO_COMPACT_WINDOW (default: 200000)
-  autocompact_pct_override: 90           # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (default: 64)
-  disable_nonessential_traffic: false     # CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC (default: true)
+  # auto_compact_window: 512000            # CLAUDE_CODE_AUTO_COMPACT_WINDOW (default: 200000)
+  # autocompact_pct_override: 80           # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (default: 64)
+  disable_nonessential_traffic: true     # CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC (default: true)
 
 backends:
   # ─── Claude (Anthropic official) ─────────────────────────────────
@@ -49,8 +49,7 @@ backends:
     type: openai-response
     base_url: https://api.example.com
     api_key: "${OPENAI_API_KEY}"
-    # reasoning_effort: low        # optional: low/medium/high/xhigh/max
-    # context_window: 400000       # optional, for statusline
+    # reasoning_effort: high        # optional: low/medium/high/xhigh/max
     models:
       opus: gpt-6-luna
       sonnet: gpt-6-luna
@@ -107,28 +106,15 @@ backends:
       input: 0.89
       output: 3.74
 
-  kimi-k2.7-code:
-    type: deepseek
-    base_url: https://api.kimi.com/coding/
-    api_key: "${KIMI_API_KEY}"
-    context_window: 256000
-    models:
-      opus: kimi-k2.7-code
-      sonnet: kimi-k2.7-code
-      haiku: kimi-k2.7-code
-    pricing:
-      input: 0.89
-      output: 3.699
-
   # ─── Qwen (Alibaba) ──────────────────────────────────────────────
-  qwen3.7-max:
+  qwen3.8-max:
     type: anthropic
     base_url: https://dashscope-intl.aliyuncs.com/apps/anthropic
     api_key: "${QWEN_API_KEY}"
     models:
-      opus: qwen3.7-max
-      sonnet: qwen3.7-max
-      haiku: qwen3.7-max
+      opus: qwen3.8-max
+      sonnet: qwen3.8-max
+      haiku: qwen3.8-max
     pricing:
       input: 0.822
       output: 2.466
@@ -139,9 +125,9 @@ backends:
     base_url: https://api.xiaomimimo.com/anthropic
     api_key: "${MIMO_API_KEY}"
     models:
-      opus: mimo-v2.5-pro
-      sonnet: mimo-v2.5-pro
-      haiku: mimo-v2.5-pro
+      opus: mimo-v2.6-pro
+      sonnet: mimo-v2.6-pro
+      haiku: mimo-v2.6-pro
     pricing:
       input: 0.411
       output: 0.822
