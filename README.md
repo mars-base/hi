@@ -409,6 +409,14 @@ Key points:
 Switch backends mid-session without restarting Claude Code. The switch only
 affects the next API call.
 
+> **Tip: run `/compact` before switching models in the same session.** Each
+> backend has its own protocol details (thinking blocks, tool signatures,
+> message ordering), and after a switch the history written by the previous
+> model is replayed to the new one. hi already normalizes most of these
+> differences automatically, but to avoid cross-protocol incompatibility
+> entirely, proactively compact first and then switch — the new model starts
+> from a clean summary instead of history from a different protocol.
+
 From within Claude Code, use the auto-generated slash commands:
 
 ```
