@@ -55,6 +55,24 @@ backends:
       sonnet: gpt-6-luna
       haiku: gpt-6-luna
 
+  # ─── Gemini (native protocol) ────────────────────────────────────
+  # Uses the native Google Gemini API:
+  # POST /v1beta/models/{model}:generateContent (or :streamGenerateContent).
+  # hi converts Claude Code's /v1/messages requests and converts replies
+  # back, including streaming, tool calls and thought signatures. The API
+  # key is sent as x-goog-api-key; it falls back to GEMINI_API_KEY /
+  # GOOGLE_API_KEY when api_key is empty. count_tokens is estimated locally
+  # because the gateway does not implement :countTokens.
+  gemini:
+    type: gemini
+    base_url: https://generativelanguage.googleapis.com
+    api_key: "${GEMINI_API_KEY}"
+    # reasoning_effort: high        # optional: low/medium/high/xhigh (max → high; xhigh depends on model)
+    models:
+      opus: gemini-4-hydrogen
+      sonnet: gemini-4-hydrogen
+      haiku: gemini-4-hydrogen
+
   # ─── MiniMax ─────────────────────────────────────────────────────
   minimax:
     type: anthropic

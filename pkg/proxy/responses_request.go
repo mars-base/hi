@@ -25,16 +25,17 @@ type anthropicTool struct {
 }
 
 type anthropicRequest struct {
-	Model       string                 `json:"model"`
-	System      json.RawMessage        `json:"system"`
-	Messages    []anthropicMessage     `json:"messages"`
-	Tools       []anthropicTool        `json:"tools"`
-	ToolChoice  map[string]interface{} `json:"tool_choice"`
-	MaxTokens   int64                  `json:"max_tokens"`
-	Stream      bool                   `json:"stream"`
-	Temperature *float64               `json:"temperature"`
-	TopP        *float64               `json:"top_p"`
-	Thinking    map[string]interface{} `json:"thinking"`
+	Model         string                 `json:"model"`
+	System        json.RawMessage        `json:"system"`
+	Messages      []anthropicMessage     `json:"messages"`
+	Tools         []anthropicTool        `json:"tools"`
+	ToolChoice    map[string]interface{} `json:"tool_choice"`
+	MaxTokens     int64                  `json:"max_tokens"`
+	Stream        bool                   `json:"stream"`
+	Temperature   *float64               `json:"temperature"`
+	TopP          *float64               `json:"top_p"`
+	StopSequences []string               `json:"stop_sequences"`
+	Thinking      map[string]interface{} `json:"thinking"`
 }
 
 func parseAnthropicRequest(body []byte) (*anthropicRequest, error) {

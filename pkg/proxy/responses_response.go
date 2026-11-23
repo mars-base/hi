@@ -799,16 +799,30 @@ func emitAnthropicMessageSSE(w http.ResponseWriter, msg map[string]interface{}) 
 	blocks, _ := msg["content"].([]interface{})
 	for i, raw := range blocks {
 		block := jsonMap(raw)
+		// The start event must carry an empty text/input; the full payload
+		// follows through deltas. Sending it twice corrupts the block.
+		startBlock := make(map[string]interface{}, len(block))
+		for k, v := range block {
+			startBlock[k] = v
+		}
+		switch jsonString(block["type"]) {
+		case "text":
+			startBlock["text"] = ""
+		case "tool_use":
+			startBlock["input"] = map[string]interface{}{}
+		}
 		sseWrite(w, flusher, "content_block_start", map[string]interface{}{
 			"index":         i,
-			"content_block": block,
+			"content_block": startBlock,
 		})
 		switch jsonString(block["type"]) {
 		case "text":
-			sseWrite(w, flusher, "content_block_delta", map[string]interface{}{
-				"index": i,
-				"delta": map[string]interface{}{"type": "text_delta", "text": jsonString(block["text"])},
-			})
+			if text := jsonString(block["text"]); text != "" {
+				sseWrite(w, flusher, "content_block_delta", map[string]interface{}{
+					"index": i,
+					"delta": map[string]interface{}{"type": "text_delta", "text": text},
+				})
+			}
 		case "tool_use":
 			if args, err := json.Marshal(block["input"]); err == nil {
 				sseWrite(w, flusher, "content_block_delta", map[string]interface{}{

@@ -192,6 +192,7 @@ hi 兼容任意 Anthropic API。除此之外，**任何提供 OpenAI Responses A
 | Qwen（阿里通义） | `anthropic` | `https://dashscope-intl.aliyuncs.com/apps/anthropic` | [Claude Code 指南](https://www.alibabacloud.com/help/en/model-studio/claude-code) |
 | MIMO（小米） | `anthropic` | `https://api.xiaomimimo.com/anthropic` | [文档](https://platform.xiaomimimo.com/docs/en-US/api/chat/anthropic-api) |
 | OpenAI Responses（兼容网关） | `openai-response` | 按服务商提供的 Responses API 地址配置 | — |
+| Google Gemini（原生协议） | `gemini` | `https://generativelanguage.googleapis.com` | [文档](https://ai.google.dev/gemini-api/docs) |
 
 > `openai-response` 后端由 hi 在代理层完成 Anthropic Messages ↔ OpenAI Responses
 > 双向转换：Claude Code 仍然只发 `/v1/messages`，hi 转发到上游 `/v1/responses`，
@@ -212,6 +213,25 @@ my-openai-backend:
 
 > **Kimi K2.7-code**（256K 上下文窗口）也已支持，后端类型可配置为 `deepseek`。
 > 建议在配置中设置 `context_window: 256000`，以便状态栏正确显示剩余上下文。
+
+> `gemini` 后端直接使用 Google Gemini 原生协议：
+> `POST /v1beta/models/{model}:generateContent`，流式为
+> `:streamGenerateContent?alt=sse`。hi 在代理层完成 Anthropic Messages 与其双向
+> 转换，支持流式与工具调用。Gemini 回放工具历史所需的 thoughtSignature 由 hi
+> 缓存在进程内存中；代理重启或切换后端后，历史工具轮会自动降级为文本，对话可
+> 继续使用。`count_tokens` 为本地估算（未调用上游 `:countTokens`）。
+
+```yaml
+my-gemini-backend:
+  type: gemini
+  base_url: https://generativelanguage.googleapis.com
+  api_key: "${GEMINI_API_KEY}"
+  # reasoning_effort: high   # → thinkingConfig.thinkingLevel
+  models:
+    opus: gemini-model
+    sonnet: gemini-model
+    haiku: gemini-model
+```
 
 > 任何支持 Anthropic API 协议的网关或代理（如雷火、OpenRouter、OneAPI、内部网关）也能直接使用——只需设置 `type: anthropic` 和对应的 `base_url`。
 
@@ -331,12 +351,13 @@ backends:
 要点：
 - `type: anthropic` — 适用于 Anthropic 兼容的 API 端点
 - `type: deepseek` — 转发前剥离顶层 `thinking` 配置（避免 `reasoning_effort` 兼容性错误），保留 content 级 thinking 块
+- `type: gemini` — Google Gemini 原生协议（`generateContent`），由 hi 转换
 - `strip_thinking` — `true` / `false`，覆盖按类型的默认值（`deepseek` 默认 `true`，`anthropic` 默认 `false`）
 - `api_key` — 支持 `${ENV_VAR}` 展开或直接填写 key
 - `models.opus/sonnet/haiku` — 将 Claude 模型名映射到后端实际模型 ID
 - `pricing` — 每百万 token 的 USD 价格，用于成本追踪
-- `context_window` — 最大上下文窗口（tokens），用于状态栏显示。默认：`deepseek` 为 ``1000000``（1M），其他类型为 ``200000``
-- `reasoning_effort` — `deepseek` 后端写入 `output_config.effort`（`max` / `high`）；`openai-response` 后端写入 `reasoning.effort`（`low` / `medium` / `high` / `xhigh` / `max`，未设置时由 thinking 配置推导，默认 `low`）。留空则不显式注入。默认：空
+- `context_window` — 最大上下文窗口（tokens），用于状态栏显示。默认：`deepseek` 与 `gemini` 为 ``1000000``（1M），其他类型为 ``200000``
+- `reasoning_effort` — `deepseek` 后端写入 `output_config.effort`（`max` / `high`）；`openai-response` 后端写入 `reasoning.effort`（`low` / `medium` / `high` / `xhigh` / `max`，未设置时由 thinking 配置推导，默认 `low`）；`gemini` 后端写入 `thinkingConfig.thinkingLevel`（`low` / `medium` / `high` / `xhigh`，`max` 映射为 `high`，`xhigh` 需模型支持如 Hydrogen）。留空则不显式注入。默认：空
 - `env` — 启动时传递给 Claude Code 的环境变量：
   - `auto_compact_window` — 自动压缩触发窗口。默认：``200000``
   - `autocompact_pct_override` — 压缩触发百分比。默认：``64``（128K 触发）

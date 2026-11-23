@@ -117,9 +117,10 @@ type PricingPerMillion struct {
 // BackendConfig defines a single API backend.
 type BackendConfig struct {
 	// Type is "anthropic" for Claude-compatible APIs, "deepseek" for
-	// DeepSeek, or "openai-response" for OpenAI Responses APIs. For
-	// "openai-response", the proxy converts Anthropic Messages requests
-	// to /v1/responses and converts the replies back.
+	// DeepSeek, "openai-response" for OpenAI Responses APIs, or "gemini"
+	// for the native Google Gemini API. For "openai-response" and "gemini"
+	// the proxy converts Anthropic Messages requests to the upstream
+	// protocol and converts the replies back.
 	Type string `yaml:"type"`
 	// BaseURL is the API endpoint. Empty means use the default.
 	BaseURL string `yaml:"base_url"`
@@ -136,13 +137,16 @@ type BackendConfig struct {
 	// Default based on backend type: true for "anthropic", false for "deepseek".
 	StripThinking *bool `yaml:"strip_thinking,omitempty"`
 	// ContextWindow is the max context window size for this backend.
-	// Used by statusline. Default: 1M for deepseek, 200k for anthropic.
+	// Used by statusline. Default: 1M for deepseek and gemini, 200k otherwise.
 	ContextWindow *int64 `yaml:"context_window,omitempty"`
 	// ReasoningEffort sets the reasoning effort for backends that support it.
 	// For "deepseek" it becomes output_config.effort (values: "high", "max").
 	// For "openai-response" it becomes reasoning.effort (values: "low",
 	// "medium", "high", "xhigh", "max"); when unset, the proxy derives it
 	// from the thinking config and defaults to "low".
+	// For "gemini" it becomes thinkingConfig.thinkingLevel (values: "low",
+	// "medium", "high", "xhigh" — note "xhigh" is model-dependent; "max"
+	// maps to "high"); when unset, no thinkingConfig is sent.
 	ReasoningEffort string `yaml:"reasoning_effort,omitempty"`
 }
 
@@ -160,7 +164,7 @@ func (b BackendConfig) ContextWindowOr() int64 {
 	if b.ContextWindow != nil {
 		return *b.ContextWindow
 	}
-	if b.Type == "deepseek" {
+	if b.Type == "deepseek" || b.Type == "gemini" {
 		return 1_000_000 // 1M
 	}
 	return 200_000 // 200k for anthropic and others

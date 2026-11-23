@@ -23,6 +23,9 @@ const (
 	// KindOpenAIResponses is the OpenAI Responses protocol, converted
 	// to/from Anthropic Messages by the proxy.
 	KindOpenAIResponses
+	// KindGemini is the native Google Gemini protocol (generateContent),
+	// converted to/from Anthropic Messages by the proxy.
+	KindGemini
 )
 
 // Backend represents an upstream API backend.
@@ -75,6 +78,8 @@ func NewBackend(name string, cfg config.BackendConfig) (Backend, error) {
 		return newDeepSeekBackend(name, cfg)
 	case "openai-response", "openai-responses":
 		return newOpenAIResponsesBackend(name, cfg)
+	case "gemini":
+		return newGeminiBackend(name, cfg)
 	default:
 		return nil, fmt.Errorf("unknown backend type: %s", cfg.Type)
 	}

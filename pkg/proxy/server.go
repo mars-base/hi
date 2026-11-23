@@ -345,6 +345,13 @@ func (ps *ProxyState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Gemini backends speak the native generateContent protocol; the proxy
+	// converts Anthropic Messages requests and responses on the fly.
+	if backend.Kind() == KindGemini && (isModel || IsCountTokensRequest(path)) {
+		ps.serveGemini(w, r, backend)
+		return
+	}
+
 	// Route ALL requests through the active backend.
 	// This ensures /login, auth validation etc. also hit the same upstream.
 	// Model-specific transforms (name remap, thinking strip) are only applied

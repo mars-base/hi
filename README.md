@@ -217,6 +217,7 @@ providers and their endpoints:
 | Qwen (Alibaba) | `anthropic` | `https://dashscope-intl.aliyuncs.com/apps/anthropic` | [Claude Code Guide](https://www.alibabacloud.com/help/en/model-studio/claude-code) |
 | MIMO (Xiaomi) | `anthropic` | `https://api.xiaomimimo.com/anthropic` | [Docs](https://platform.xiaomimimo.com/docs/en-US/api/chat/anthropic-api) |
 | OpenAI Responses (compatible gateways) | `openai-response` | Configure the provider's Responses API endpoint | — |
+| Google Gemini (native API) | `gemini` | `https://generativelanguage.googleapis.com` | [Docs](https://ai.google.dev/gemini-api/docs) |
 
 > The `openai-response` backend translates Anthropic Messages ↔ OpenAI Responses in hi.
 > Claude Code continues sending `/v1/messages`; hi forwards to `/v1/responses` and converts
@@ -239,6 +240,27 @@ my-openai-backend:
 > **Kimi K2.7‑code** (256K context window) is supported as a `deepseek`‑type
 > backend. Set `context_window: 256000` in your config for accurate statusline
 > display.
+
+> The `gemini` backend speaks the native Google Gemini protocol:
+> `POST /v1beta/models/{model}:generateContent`, streaming via
+> `:streamGenerateContent?alt=sse`. hi converts Anthropic Messages requests and
+> replies in both directions, including streaming and tool calls. The proxy
+> caches Gemini thought signatures (required when replaying tool history) in
+> process memory; after a proxy restart or a backend switch, older tool turns
+> are replayed as plain text so conversations keep working. `count_tokens` is
+> estimated locally because the API (`:countTokens`) is not used.
+
+```yaml
+my-gemini-backend:
+  type: gemini
+  base_url: https://generativelanguage.googleapis.com
+  api_key: "${GEMINI_API_KEY}"
+  # reasoning_effort: high   # → thinkingConfig.thinkingLevel
+  models:
+    opus: gemini-model
+    sonnet: gemini-model
+    haiku: gemini-model
+```
 
 > Any gateway or proxy that speaks the Anthropic API protocol (e.g. Leihuo,
 > OpenRouter, OneAPI, internal gateways) also works — just set `type: anthropic`
@@ -364,11 +386,12 @@ backends:
 Key points:
 - `type: anthropic` — for Anthropic‑compatible API endpoints
 - `type: deepseek` — strips thinking blocks before forwarding
+- `type: gemini` — native Google Gemini protocol (`generateContent`), converted by hi
 - `api_key` — supports `${ENV_VAR}` expansion or literal keys
 - `models.opus/sonnet/haiku` — maps Claude model names to backend‑specific IDs
 - `pricing` — USD per 1M tokens, used by cost tracking
-- `context_window` — max context window size in tokens for statusline display. Default: ``1000000`` for `deepseek`, ``200000`` for other types
-- `reasoning_effort` — `deepseek` uses `output_config.effort` (`max` / `high`); `openai-response` uses `reasoning.effort` (`low` / `medium` / `high` / `xhigh` / `max`, inferred from thinking config when unset, defaulting to `low`). Empty means no explicit override. Default: empty
+- `context_window` — max context window size in tokens for statusline display. Default: ``1000000`` for `deepseek` and `gemini`, ``200000`` for other types
+- `reasoning_effort` — `deepseek` uses `output_config.effort` (`max` / `high`); `openai-response` uses `reasoning.effort` (`low` / `medium` / `high` / `xhigh` / `max`, inferred from thinking config when unset, defaulting to `low`); `gemini` uses `thinkingConfig.thinkingLevel` (`low` / `medium` / `high` / `xhigh`; `max` maps to `high`; `xhigh` requires a model that supports it such as Hydrogen). Empty means no explicit override. Default: empty
 - `env` — environment variables passed to Claude Code at launch:
   - `auto_compact_window` — auto-compact trigger window. Default: ``200000``
   - `autocompact_pct_override` — compact at this percentage of window. Default: ``64`` (128K trigger)
