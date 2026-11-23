@@ -245,7 +245,7 @@ proxy_port: 18799
 
 env:
   auto_compact_window: 200000       # CLAUDE_CODE_AUTO_COMPACT_WINDOW
-  autocompact_pct_override: 64      # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE（64% × 200K = 128K 触发）
+  autocompact_pct_override: 80      # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE（80% × 200K = 160K 触发）
   disable_nonessential_traffic: true  # CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
 
 backends:
@@ -359,7 +359,7 @@ backends:
 - `reasoning_effort` — `deepseek` 后端写入 `output_config.effort`（`max` / `high`）；`openai-response` 后端写入 `reasoning.effort`（`low` / `medium` / `high` / `xhigh` / `max`，未设置时由 thinking 配置推导，默认 `low`）；`gemini` 后端写入 `thinkingConfig.thinkingLevel`（`low` / `medium` / `high` / `xhigh`，`max` 映射为 `high`，`xhigh` 需模型支持如 Hydrogen）。留空则不显式注入。默认：空
 - `env` — 启动时传递给 Claude Code 的环境变量：
   - `auto_compact_window` — 自动压缩触发窗口。默认：``200000``
-  - `autocompact_pct_override` — 压缩触发百分比。默认：``64``（128K 触发）
+  - `autocompact_pct_override` — 压缩触发百分比。默认：``80``（160K 触发）
   - `disable_nonessential_traffic` — 禁用产品遥测。默认：``true``
 
 > **DeepSeek 1M 上下文窗口**：使用 DeepSeek 官方 API 时，在模型名称后追加

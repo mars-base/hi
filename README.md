@@ -278,7 +278,7 @@ proxy_port: 18799
 
 env:
   auto_compact_window: 200000       # CLAUDE_CODE_AUTO_COMPACT_WINDOW
-  autocompact_pct_override: 64      # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (64% × 200K = 128K trigger)
+  autocompact_pct_override: 80      # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (80% × 200K = 160K trigger)
   disable_nonessential_traffic: true  # CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
 
 backends:
@@ -395,7 +395,7 @@ Key points:
 - `reasoning_effort` — `deepseek` uses `output_config.effort` (`max` / `high`); `openai-response` uses `reasoning.effort` (`low` / `medium` / `high` / `xhigh` / `max`, inferred from thinking config when unset, defaulting to `low`); `gemini` uses `thinkingConfig.thinkingLevel` (`low` / `medium` / `high` / `xhigh`; `max` maps to `high`; `xhigh` requires a model that supports it such as Hydrogen). Empty means no explicit override. Default: empty
 - `env` — environment variables passed to Claude Code at launch:
   - `auto_compact_window` — auto-compact trigger window. Default: ``200000``
-  - `autocompact_pct_override` — compact at this percentage of window. Default: ``64`` (128K trigger)
+  - `autocompact_pct_override` — compact at this percentage of window. Default: ``80`` (160K trigger)
   - `disable_nonessential_traffic` — disable product telemetry. Default: ``true``
 
 > **DeepSeek 1M context window**: for the official DeepSeek API, append

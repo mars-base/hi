@@ -9,7 +9,7 @@ proxy_port: 18799
 
 env:
   # auto_compact_window: 512000            # CLAUDE_CODE_AUTO_COMPACT_WINDOW (default: 200000)
-  # autocompact_pct_override: 80           # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (default: 64)
+  # autocompact_pct_override: 80           # CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (default: 80)
   disable_nonessential_traffic: true     # CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC (default: true)
 
 backends:
