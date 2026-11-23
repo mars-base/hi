@@ -160,6 +160,83 @@ func TestGeminiToolSignatureReplay(t *testing.T) {
 	}
 }
 
+func TestGeminiToolResultWithTextKeepsTextFirst(t *testing.T) {
+	sigs := newThoughtSigStore()
+	sigs.putAll([]string{"t1"}, "SIG")
+
+	req := mustParseAnthropicRequest(t, `{
+		"messages": [
+			{"role": "user", "content": "weather?"},
+			{"role": "assistant", "content": [
+				{"type": "tool_use", "id": "t1", "name": "get_weather", "input": {"city": "Paris"}}
+			]},
+			{"role": "user", "content": [
+				{"type": "tool_result", "tool_use_id": "t1", "content": "sunny"},
+				{"type": "text", "text": "now summarize"}
+			]}
+		]
+	}`)
+
+	out, err := convertRequestToGemini(req, "", sigs)
+	if err != nil {
+		t.Fatalf("convert: %v", err)
+	}
+
+	userTurn := out.Contents[len(out.Contents)-1]
+	if userTurn.Role != "user" {
+		t.Fatalf("tail role = %q", userTurn.Role)
+	}
+	if len(userTurn.Parts) != 2 {
+		t.Fatalf("user parts = %+v", userTurn.Parts)
+	}
+	if userTurn.Parts[0].Text != "now summarize" || userTurn.Parts[0].FunctionResponse != nil {
+		t.Errorf("first part must be the text, got %+v", userTurn.Parts[0])
+	}
+	if userTurn.Parts[1].FunctionResponse == nil {
+		t.Errorf("functionResponse must come last, got %+v", userTurn.Parts[1])
+	}
+}
+
+func TestGeminiMergedToolResultAndUserTextKeepsTextFirst(t *testing.T) {
+	sigs := newThoughtSigStore()
+	sigs.putAll([]string{"t1"}, "SIG")
+
+	// A tool-result message immediately followed by another user message is
+	// merged into one turn; the gateway rejects the functionResponse-first
+	// shape as a trailing model turn (compact and model switches hit this).
+	req := mustParseAnthropicRequest(t, `{
+		"messages": [
+			{"role": "user", "content": "weather?"},
+			{"role": "assistant", "content": [
+				{"type": "tool_use", "id": "t1", "name": "get_weather", "input": {"city": "Paris"}}
+			]},
+			{"role": "user", "content": [
+				{"type": "tool_result", "tool_use_id": "t1", "content": "sunny"}
+			]},
+			{"role": "user", "content": "CRITICAL: Respond with TEXT ONLY."}
+		]
+	}`)
+
+	out, err := convertRequestToGemini(req, "", sigs)
+	if err != nil {
+		t.Fatalf("convert: %v", err)
+	}
+
+	if len(out.Contents) != 3 {
+		t.Fatalf("contents = %d, want merged tail: %+v", len(out.Contents), out.Contents)
+	}
+	userTurn := out.Contents[2]
+	if userTurn.Role != "user" || len(userTurn.Parts) != 2 {
+		t.Fatalf("merged tail = %+v", userTurn)
+	}
+	if userTurn.Parts[0].Text != "CRITICAL: Respond with TEXT ONLY." || userTurn.Parts[0].FunctionResponse != nil {
+		t.Errorf("first part must be the text, got %+v", userTurn.Parts[0])
+	}
+	if userTurn.Parts[1].FunctionResponse == nil {
+		t.Errorf("functionResponse must come last, got %+v", userTurn.Parts[1])
+	}
+}
+
 func TestGeminiToolResultErrorAndImage(t *testing.T) {
 	sigs := newThoughtSigStore()
 	sigs.putAll([]string{"t1"}, "SIG")

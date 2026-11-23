@@ -147,6 +147,17 @@ func convertRequestToGemini(req *anthropicRequest, effort string, sigs *thoughtS
 		}
 	}
 
+	// The gateway classifies a trailing user turn by its first part: a turn
+	// that starts with functionResponse and also carries text is rejected as
+	// "Requests ending with a model turn are not supported." Tool results
+	// merged with a following user message (summaries, reminders) hit this,
+	// so keep text before functionResponse within each user turn.
+	for i := range out.Contents {
+		if out.Contents[i].Role == "user" {
+			out.Contents[i].Parts = textBeforeFunctionResponses(out.Contents[i].Parts)
+		}
+	}
+
 	if len(out.Contents) == 0 {
 		out.Contents = []geminiContent{{Role: "user", Parts: []geminiPart{{Text: "."}}}}
 	} else if out.Contents[len(out.Contents)-1].Role == "model" {
@@ -514,6 +525,35 @@ func geminiThinkingLevel(effort string) string {
 	default:
 		return ""
 	}
+}
+
+// textBeforeFunctionResponses moves functionResponse parts behind the other
+// parts of a mixed user turn, preserving the relative order within each group.
+// Pure tool-result turns are left untouched.
+func textBeforeFunctionResponses(parts []geminiPart) []geminiPart {
+	hasResponse, hasOther := false, false
+	for _, p := range parts {
+		if p.FunctionResponse != nil {
+			hasResponse = true
+		} else {
+			hasOther = true
+		}
+	}
+	if !hasResponse || !hasOther {
+		return parts
+	}
+	ordered := make([]geminiPart, 0, len(parts))
+	for _, p := range parts {
+		if p.FunctionResponse == nil {
+			ordered = append(ordered, p)
+		}
+	}
+	for _, p := range parts {
+		if p.FunctionResponse != nil {
+			ordered = append(ordered, p)
+		}
+	}
+	return ordered
 }
 
 // geminiTailRoles formats the roles of the last n contents for debug logs.
