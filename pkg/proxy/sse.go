@@ -56,57 +56,27 @@ func (ps *ProxyState) transformRequestBody(body []byte, isModel bool, activeName
 		}
 	}
 
-	// For backends that keep thinking blocks (deepseek etc.), inject thinking config when missing. When switching from another backend leaves the conversation with thinking blocks in some but not all assistant messages, add empty thinking blocks to messages that lack them — deepseek-v4-pro requires ALL assistant messages to have thinking when enabled.
+	// For backends that keep thinking blocks (deepseek etc.), thinking mode
+	// must be enabled and assistant turns carried over from other backends
+	// (claude, gemini) have no thinking blocks. The upstream rejects any
+	// tool-use turn lacking its thinking block, so normalize the history by
+	// prepending an empty thinking block to every assistant message that
+	// lacks one, then ensure thinking is enabled.
 	if !backend.NeedsThinkingStrip() {
-		mixed := isMixedThinking(parsed)
-		if mixed {
-			// deepseek-v4-pro requires ALL assistant messages to have thinking
-			// blocks when thinking mode is on. Some messages from claude lack
-			// them, causing 400. Add a minimal empty thinking block to any
-			// assistant message that doesn't have one.
-			if messages, ok := parsed["messages"].([]interface{}); ok {
-				for _, msg := range messages {
-					if msgMap, ok := msg.(map[string]interface{}); ok {
-						if role, _ := msgMap["role"].(string); role != "assistant" {
-							continue
-						}
-						if content, ok := msgMap["content"].([]interface{}); ok {
-							hasThinking := false
-							for _, block := range content {
-								if blockMap, ok := block.(map[string]interface{}); ok {
-									t := blockMap["type"].(string)
-									if t == "thinking" || t == "redacted_thinking" {
-										hasThinking = true
-										break
-									}
-								}
-							}
-							if !hasThinking {
-								emptyThink := map[string]interface{}{"type": "thinking", "thinking": ""}
-								msgMap["content"] = append([]interface{}{emptyThink}, content...)
-								changed = true
-							}
-						}
-					}
-				}
-			}
-			if _, ok := parsed["thinking"]; !ok {
-				parsed["thinking"] = map[string]interface{}{"type": "enabled"}
-				changed = true
-			}
-			logx.Debug("Mixed thinking state detected — normalized thinking blocks, set thinking=enabled (backend: %s)", activeName)
-		} else {
-			think, ok := parsed["thinking"].(map[string]interface{})
-			if !ok {
-				think = map[string]interface{}{}
-				parsed["thinking"] = think
-				changed = true
-			}
-			if t, _ := think["type"].(string); t != "enabled" {
-				think["type"] = "enabled"
-				changed = true
-				logx.Debug("Injected thinking config (backend: %s)", activeName)
-			}
+		if n := addMissingThinkingBlocks(parsed); n > 0 {
+			changed = true
+			logx.Debug("Added empty thinking blocks to %d assistant message(s) (backend: %s)", n, activeName)
+		}
+		think, ok := parsed["thinking"].(map[string]interface{})
+		if !ok {
+			think = map[string]interface{}{}
+			parsed["thinking"] = think
+			changed = true
+		}
+		if t, _ := think["type"].(string); t != "enabled" {
+			think["type"] = "enabled"
+			changed = true
+			logx.Debug("Injected thinking config (backend: %s)", activeName)
 		}
 	}
 
@@ -264,16 +234,14 @@ func hasThinkingBlocks(parsed map[string]interface{}) bool {
 	return countAssistantWithThinking(parsed) > 0
 }
 
-// isMixedThinking returns true if some but not all assistant messages
-// in the conversation contain thinking blocks — indicating a switch
-// between backends with different thinking modes.
-func isMixedThinking(parsed map[string]interface{}) bool {
+// addMissingThinkingBlocks prepends an empty thinking block to every
+// assistant message that lacks one and returns how many were changed.
+func addMissingThinkingBlocks(parsed map[string]interface{}) int {
 	messages, ok := parsed["messages"].([]interface{})
 	if !ok {
-		return false
+		return 0
 	}
-	total := 0
-	withThinking := 0
+	added := 0
 	for _, msg := range messages {
 		msgMap, ok := msg.(map[string]interface{})
 		if !ok {
@@ -282,22 +250,35 @@ func isMixedThinking(parsed map[string]interface{}) bool {
 		if role, _ := msgMap["role"].(string); role != "assistant" {
 			continue
 		}
-		total++
-		content, ok := msgMap["content"].([]interface{})
-		if !ok {
-			continue
-		}
-		for _, block := range content {
-			if blockMap, ok := block.(map[string]interface{}); ok {
-				t, _ := blockMap["type"].(string)
-				if t == "thinking" || t == "redacted_thinking" {
-					withThinking++
-					break
+		switch content := msgMap["content"].(type) {
+		case string:
+			blocks := []interface{}{
+				map[string]interface{}{"type": "thinking", "thinking": ""},
+			}
+			if content != "" {
+				blocks = append(blocks, map[string]interface{}{"type": "text", "text": content})
+			}
+			msgMap["content"] = blocks
+			added++
+		case []interface{}:
+			hasThinking := false
+			for _, block := range content {
+				if blockMap, ok := block.(map[string]interface{}); ok {
+					t, _ := blockMap["type"].(string)
+					if t == "thinking" || t == "redacted_thinking" {
+						hasThinking = true
+						break
+					}
 				}
+			}
+			if !hasThinking {
+				emptyThink := map[string]interface{}{"type": "thinking", "thinking": ""}
+				msgMap["content"] = append([]interface{}{emptyThink}, content...)
+				added++
 			}
 		}
 	}
-	return withThinking > 0 && withThinking < total
+	return added
 }
 
 // countAssistantWithThinking returns the number of assistant messages
