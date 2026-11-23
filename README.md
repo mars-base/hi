@@ -20,10 +20,11 @@ through normally.
 
 > ⭐ **If you like hi, please give us a star on [GitHub](https://github.com/mars-base/hi)!**
 
-Connect to **any** Anthropic‑compatible API. Officially supports **Claude**,
-**DeepSeek**, **MiniMax**, **GLM**, **Kimi (K2.6 / K2.7‑code)**, **Qwen**, **MIMO**,
-OpenRouter, internal gateways, and custom endpoints. Hot‑switch between all of
-them without restarting your session.
+Connect to **any** Anthropic‑compatible API, plus native OpenAI Responses and
+Google Gemini endpoints. Officially supports **Claude**, **Gemini**, **DeepSeek**,
+**MiniMax**, **GLM**, **Kimi (K2.6 / K2.7‑code)**, **Qwen**, **MIMO**, OpenRouter,
+internal gateways, and custom endpoints. Hot‑switch between all of them without
+restarting your session.
 
 The name comes from the first word you type into any Claude Code or AI agent
 session — **hi**. The agent replies "Hello, how can I help you?" and the work

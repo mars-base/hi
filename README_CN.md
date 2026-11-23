@@ -8,8 +8,7 @@
 
 > ⭐ **如果喜欢 hi，请在 [GitHub](https://github.com/mars-base/hi) 给我们一颗 star！**
 
-可连接**任意** Anthropic 兼容 API。官方支持 **Claude**、**DeepSeek**、**MiniMax**、
-**GLM**、**Kimi（K2.6 / K2.7-code）**、**Qwen**、**MIMO**、OpenRouter、内部网关和自定义端点。在同一个 session 中热切换所有后端，无需重启。
+可连接**任意** Anthropic 兼容 API，也支持原生 OpenAI Responses 与 Google Gemini 协议。官方支持 **Claude**、**Gemini**、**DeepSeek**、**MiniMax**、**GLM**、**Kimi（K2.6 / K2.7-code）**、**Qwen**、**MIMO**、OpenRouter、内部网关和自定义端点。在同一个 session 中热切换所有后端，无需重启。
 
 名称由来：每一次打开 Claude Code 或其他 AI agent 工具，第一句话都是从一句 **hi** 开始。AI 回复"你好，有什么可以帮助你的？"——然后工作就开始了。简单、好记、贴合 AI 时代。如有更好的名称也会更换。
 
