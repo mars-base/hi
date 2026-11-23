@@ -149,6 +149,14 @@ func convertRequestToGemini(req *anthropicRequest, effort string, sigs *thoughtS
 
 	if len(out.Contents) == 0 {
 		out.Contents = []geminiContent{{Role: "user", Parts: []geminiPart{{Text: "."}}}}
+	} else if out.Contents[len(out.Contents)-1].Role == "model" {
+		// Gemini rejects histories that end with a model turn. Trailing
+		// Anthropic messages that convert to no parts (system reminders,
+		// empty or thinking-only user content) can leave the history
+		// model-ended; append a minimal user turn so the request is accepted.
+		logx.Debug("gemini convert: history ended with a model turn (tail roles: %s); appending user continuation",
+			geminiTailRoles(out.Contents, 4))
+		out.Contents = append(out.Contents, geminiContent{Role: "user", Parts: []geminiPart{{Text: "Continue."}}})
 	}
 
 	out.Tools = convertGeminiTools(req.Tools)
@@ -506,6 +514,18 @@ func geminiThinkingLevel(effort string) string {
 	default:
 		return ""
 	}
+}
+
+// geminiTailRoles formats the roles of the last n contents for debug logs.
+func geminiTailRoles(contents []geminiContent, n int) string {
+	if n > len(contents) {
+		n = len(contents)
+	}
+	roles := make([]string, 0, n)
+	for _, c := range contents[len(contents)-n:] {
+		roles = append(roles, c.Role)
+	}
+	return strings.Join(roles, ",")
 }
 
 // appendGeminiContent merges adjacent same-role contents: Gemini expects

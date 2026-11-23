@@ -54,6 +54,9 @@ func (ps *ProxyState) serveGemini(w http.ResponseWriter, r *http.Request, backen
 	}
 	logx.Debug("gemini convert: model %s → %s, request %d → %d bytes (stream=%v)",
 		req.Model, mappedModel, len(bodyBytes), len(converted), req.Stream)
+	if bytes.Contains(bodyBytes, []byte("CRITICAL: Respond with TEXT ONLY")) {
+		logx.Debug("gemini convert: request carries the compact summary prompt")
+	}
 
 	upstreamURL := geminiEndpointURL(backend.TargetURL(), mappedModel, req.Stream)
 

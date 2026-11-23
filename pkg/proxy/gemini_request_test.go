@@ -354,6 +354,54 @@ func TestGeminiEmptyContentsPlaceholder(t *testing.T) {
 	}
 }
 
+func TestGeminiTrailingSystemGetsUserContinuation(t *testing.T) {
+	req := mustParseAnthropicRequest(t, `{
+		"messages": [
+			{"role": "user", "content": "hi"},
+			{"role": "assistant", "content": "hello"},
+			{"role": "system", "content": "trailing reminder"}
+		]
+	}`)
+	out, err := convertRequestToGemini(req, "", newThoughtSigStore())
+	if err != nil {
+		t.Fatalf("convert: %v", err)
+	}
+	n := len(out.Contents)
+	if n != 3 || out.Contents[n-1].Role != "user" {
+		t.Fatalf("contents must end with a user turn: %+v", out.Contents)
+	}
+	if got := out.Contents[n-1].Parts[0].Text; got != "Continue." {
+		t.Errorf("continuation text = %q", got)
+	}
+	if out.SystemInstruction == nil || !strings.Contains(out.SystemInstruction.Parts[0].Text, "trailing reminder") {
+		t.Errorf("trailing system text must move into systemInstruction: %+v", out.SystemInstruction)
+	}
+}
+
+func TestGeminiTrailingEmptyUserGetsUserContinuation(t *testing.T) {
+	req := mustParseAnthropicRequest(t, `{
+		"messages": [
+			{"role": "user", "content": "hi"},
+			{"role": "assistant", "content": "hello"},
+			{"role": "user", "content": [
+				{"type": "thinking", "thinking": "internal"},
+				{"type": "text", "text": ""}
+			]}
+		]
+	}`)
+	out, err := convertRequestToGemini(req, "", newThoughtSigStore())
+	if err != nil {
+		t.Fatalf("convert: %v", err)
+	}
+	n := len(out.Contents)
+	if n != 3 || out.Contents[n-1].Role != "user" {
+		t.Fatalf("contents must end with a user turn: %+v", out.Contents)
+	}
+	if len(out.Contents[n-1].Parts) != 1 || out.Contents[n-1].Parts[0].Text != "Continue." {
+		t.Errorf("continuation parts = %+v", out.Contents[n-1].Parts)
+	}
+}
+
 func TestGeminiEndpointURL(t *testing.T) {
 	b, err := NewBackend("gemini", config.BackendConfig{
 		Type:    "gemini",
